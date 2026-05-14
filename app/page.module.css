@@ -2,7 +2,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 100vh;
+  min-height: 100dvh;
   background-color: #f0f0f0;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
@@ -10,7 +10,7 @@
 .mobileFrame {
   width: 100%;
   max-width: 400px;
-  height: 100vh;
+  height: 100dvh;
   max-height: 850px;
   background-color: white;
   position: relative;
@@ -237,12 +237,19 @@
   letter-spacing: 0.3px;
 }
 
-@media (max-width: 400px) {
+@media (max-width: 480px) {
   .mobileFrame {
-    height: 100vh;
+    max-width: 100%;
+    height: 100dvh;
     max-height: none;
     border-radius: 0;
     box-shadow: none;
+  }
+  .formContainer {
+    padding: 16px;
+  }
+  .formCard {
+    padding: 25px 20px;
   }
 }
 
@@ -254,6 +261,7 @@
   justify-content: center;
   flex: 1;
   background: linear-gradient(135deg, #f6f9fc 0%, #e8f0f8 100%);
+  overflow-y: auto;
 }
 
 .formCard {
