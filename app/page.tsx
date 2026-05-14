@@ -1,65 +1,191 @@
-import Image from "next/image";
+"use client";
+
+import { useState } from 'react';
+import styles from './page.module.css';
 
 export default function Home() {
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [amountInput, setAmountInput] = useState('');
+  const [paymentToInput, setPaymentToInput] = useState('');
+  
+  const [amount, setAmount] = useState('');
+  const [paymentTo, setPaymentTo] = useState('');
+  const [timestamp, setTimestamp] = useState('');
+
+  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Remove all non-digit characters
+    const rawValue = e.target.value.replace(/\D/g, '');
+    if (!rawValue) {
+      setAmountInput('');
+      return;
+    }
+    // Add thousand separators
+    const formatted = parseInt(rawValue, 10).toLocaleString('en-US');
+    setAmountInput(formatted);
+  };
+
+  const formatAmount = (val: string) => {
+    const num = parseFloat(val.replace(/,/g, ''));
+    if (isNaN(num)) return "0.00";
+    return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!amountInput || !paymentToInput) return;
+
+    setAmount(formatAmount(amountInput));
+    setPaymentTo(paymentToInput);
+
+    // Format date like: "28 Mar 2026 07:54:54"
+    const now = new Date();
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const day = now.getDate().toString().padStart(2, '0');
+    const month = months[now.getMonth()];
+    const year = now.getFullYear();
+    const hours = now.getHours().toString().padStart(2, '0');
+    const minutes = now.getMinutes().toString().padStart(2, '0');
+    const seconds = now.getSeconds().toString().padStart(2, '0');
+
+    setTimestamp(`${day} ${month} ${year} ${hours}:${minutes}:${seconds}`);
+    setIsSubmitted(true);
+  };
+
+  if (!isSubmitted) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.mobileFrame}>
+          <div className={styles.formContainer}>
+            <div className={styles.formCard}>
+              <div className={styles.formHeader}>
+                <img src="/bca-bank-central-asia-logo.svg" alt="BCA" className={styles.bcaLogoSmall} />
+                <h2 className={styles.formTitle}>Receipt Generator</h2>
+                <p className={styles.formSubtitle}>Simulasi struk transfer m-BCA</p>
+              </div>
+              
+              <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div className={styles.inputGroup}>
+                  <label className={styles.inputLabel}>Pembayaran ke</label>
+                  <input 
+                    type="text" 
+                    value={paymentToInput} 
+                    onChange={(e) => setPaymentToInput(e.target.value)}
+                    placeholder="Contoh: Kajue Interior, WR TR"
+                    className={styles.inputField}
+                    required
+                  />
+                </div>
+                
+                <div className={styles.inputGroup}>
+                  <label className={styles.inputLabel}>Nominal (IDR)</label>
+                  <input 
+                    type="text" 
+                    inputMode="numeric"
+                    value={amountInput} 
+                    onChange={handleAmountChange}
+                    placeholder="Contoh: 50,000"
+                    className={styles.inputField}
+                    required
+                  />
+                </div>
+                
+                <button 
+                  type="submit"
+                  className={styles.submitBtn}
+                >
+                  Buat Struk
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className={styles.container}>
+      <div className={styles.mobileFrame}>
+        {/* Watermark Background */}
+        <div className={styles.watermark}></div>
+
+        <div className={styles.content}>
+          {/* Header */}
+          <div className={styles.header}>
+            <img src="/bca-bank-central-asia-logo.svg" alt="BCA Logo" className={styles.bcaLogoImage} />
+          </div>
+
+          <div className={styles.separator}></div>
+
+          {/* Success Section */}
+          <div className={styles.successSection}>
+            <div className={styles.checkIconContainer}>
+              <div className={styles.checkIconInner}>
+                <svg
+                  width="42"
+                  height="42"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="white"
+                  strokeWidth="4"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+              </div>
+            </div>
+            <div className={styles.title}>Pembayaran QRIS Berhasil</div>
+            <div className={styles.date}>{timestamp}</div>
+            <div className={styles.amount}>IDR {amount}</div>
+          </div>
+
+          {/* Details Section */}
+          <div className={styles.detailsSection}>
+            <div className={`${styles.detailRow} ${styles.borderedBottom}`}>
+              <div className={styles.detailLabel}>Pembayaran ke</div>
+              <div className={`${styles.detailValue} ${styles.uppercase}`}>
+                {paymentTo}
+              </div>
+            </div>
+
+            <div className={styles.detailRowGroup}>
+              <div className={styles.detailRow}>
+                <div className={styles.detailLabel}>Pengakuisisi</div>
+                <div className={styles.detailValue}>GOPAY</div>
+              </div>
+
+              <div className={`${styles.detailRow} ${styles.borderedBottom} ${styles.borderedTop}`}>
+                <div className={styles.detailLabel}>RRN</div>
+                <div className={styles.detailValue}>
+                  328749151
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className={styles.lihatDetail}>
+            Lihat Detail <span className={styles.chevronDown}></span>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        {/* Footer */}
+        <div className={styles.footerWrapper}>
+          <div className={styles.footer}>
+            <button className={styles.iconButton} aria-label="Share">
+              <svg viewBox="0 0 24 24">
+                <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92c0-1.61-1.31-2.92-2.92-2.92z" />
+              </svg>
+            </button>
+            <button className={styles.iconButton} aria-label="Download">
+              <svg viewBox="0 0 24 24">
+                <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
+              </svg>
+            </button>
+            <button className={styles.selesaiBtn} onClick={() => setIsSubmitted(false)}>Selesai</button>
+          </div>
         </div>
-      </main>
+      </div>
     </div>
   );
 }

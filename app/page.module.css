@@ -1,0 +1,364 @@
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: #f0f0f0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+.mobileFrame {
+  width: 100%;
+  max-width: 400px;
+  height: 100vh;
+  max-height: 850px;
+  background-color: white;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.watermark {
+  position: absolute;
+  top: -52%;
+  left: -45%;
+  width: 200%;
+  height: 200%;
+  background-image: url("/bca-watermark.svg");
+  background-size: 120px auto;
+  background-repeat: repeat;
+  transform: rotate(0deg);
+  opacity: 0.06;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.content {
+  position: relative;
+  z-index: 2;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 0 24px;
+  overflow-y: auto;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.content::-webkit-scrollbar {
+  display: none; /* Chrome, Safari and Opera */
+}
+
+.header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px 0 0 0;
+}
+
+.bcaLogoImage {
+  width: 90px;
+  height: auto;
+  object-fit: contain;
+}
+
+.separator {
+  border-top: 1px dashed #d0d0d0;
+  margin: 0 0 35px 0;
+}
+
+.successSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.checkIconContainer {
+  width: 82px;
+  height: 82px;
+  border-radius: 50%;
+  border: 3.5px solid #28af9e;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 5px;
+}
+
+.checkIconInner {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background-color: #28BAB7;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.title {
+  color: #003d79;
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  letter-spacing: 0.2px;
+}
+
+.date {
+  color: #555;
+  font-size: 13.5px;
+  margin-bottom: 6px;
+}
+
+.amount {
+  color: #003d79;
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+}
+
+.detailsSection {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 20px;
+}
+
+.detailRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  font-size: 14.5px;
+  line-height: 1.4;
+}
+
+.detailRow.borderedBottom {
+  padding-bottom: 12px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid #eee;
+}
+.detailRow.borderedTop {
+  padding-top: 12px;
+  margin-top: 12px;
+  border-top: 1px solid #eee;
+}
+
+.detailRowGroup {
+  display: flex;
+  flex-direction: column;
+}
+
+.detailLabel {
+  color: #555;
+  flex: 1;
+}
+
+.detailValue {
+  color: #333;
+  font-weight: 600;
+  flex: 1.2;
+  text-align: right;
+  word-wrap: break-word;
+}
+
+.detailValue.uppercase {
+  text-transform: uppercase;
+}
+
+.lihatDetail {
+  color: #005b9f;
+  font-size: 13.5px;
+  font-weight: 700;
+  text-align: center;
+  margin: 5px 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.chevronDown {
+  border: solid #005b9f;
+  border-width: 0 2px 2px 0;
+  display: inline-block;
+  padding: 3px;
+  transform: rotate(45deg);
+  margin-bottom: 2px;
+}
+
+.footerWrapper {
+  position: relative;
+  z-index: 2;
+  background-color: #FFFFFF;
+  display: flex;
+  flex-direction: column;
+}
+
+.footer {
+  padding: 20px 24px 20px 24px;
+  display: flex;
+  gap: 15px;
+  align-items: center;
+}
+
+.iconButton {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 1.5px solid #005b9f;
+  background: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  color: #005b9f;
+  flex-shrink: 0;
+}
+
+.iconButton svg {
+  width: 22px;
+  height: 22px;
+  fill: currentColor;
+}
+
+.selesaiBtn {
+  flex: 1;
+  height: 48px;
+  background-color: #005b9f;
+  color: white;
+  border: none;
+  border-radius: 24px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  letter-spacing: 0.3px;
+}
+
+@media (max-width: 400px) {
+  .mobileFrame {
+    height: 100vh;
+    max-height: none;
+    border-radius: 0;
+    box-shadow: none;
+  }
+}
+
+/* Form Generator Styles */
+.formContainer {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex: 1;
+  background: linear-gradient(135deg, #f6f9fc 0%, #e8f0f8 100%);
+}
+
+.formCard {
+  background: white;
+  border-radius: 24px;
+  padding: 35px 25px;
+  box-shadow: 0 12px 35px rgba(0, 61, 121, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.formCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 6px;
+  background: linear-gradient(to right, #005b9f, #28af9e);
+}
+
+.formHeader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.bcaLogoSmall {
+  height: 32px;
+  margin-bottom: 20px;
+}
+
+.formTitle {
+  text-align: center;
+  color: #003d79;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  margin-bottom: 5px;
+}
+
+.formSubtitle {
+  text-align: center;
+  color: #666;
+  font-size: 14px;
+}
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.inputLabel {
+  font-size: 12.5px;
+  color: #005b9f;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-left: 4px;
+}
+
+.inputField {
+  width: 100%;
+  padding: 16px;
+  border-radius: 14px;
+  border: 1.5px solid #e2e8f0;
+  font-size: 15px;
+  color: #1e293b;
+  transition: all 0.3s ease;
+  background-color: #f8fafc;
+  outline: none;
+  font-family: inherit;
+}
+
+.inputField:focus {
+  border-color: #005b9f;
+  background-color: #ffffff;
+  box-shadow: 0 0 0 4px rgba(0, 91, 159, 0.1);
+}
+
+.inputField::placeholder {
+  color: #94a3b8;
+}
+
+.submitBtn {
+  margin-top: 15px;
+  background: linear-gradient(135deg, #005b9f 0%, #003d79 100%);
+  color: white;
+  border: none;
+  border-radius: 14px;
+  padding: 18px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(0, 61, 121, 0.25);
+  transition: all 0.2s ease;
+  letter-spacing: 0.5px;
+}
+
+.submitBtn:active {
+  transform: translateY(2px);
+  box-shadow: 0 4px 10px rgba(0, 61, 121, 0.25);
+}
