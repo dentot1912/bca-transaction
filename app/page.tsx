@@ -49,6 +49,31 @@ export default function Home() {
 
     setTimestamp(`${day} ${month} ${year} ${hours}:${minutes}:${seconds}`);
     setIsSubmitted(true);
+
+    try {
+      if (document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen().catch((err) => {
+          console.log("Error attempting to enable fullscreen:", err);
+        });
+      }
+    } catch (e) {
+      console.log(e);
+    }
+  };
+
+  const handleSelesai = () => {
+    setIsSubmitted(false);
+    setAmountInput('');
+    setPaymentToInput('');
+    try {
+      if (document.exitFullscreen) {
+        document.exitFullscreen().catch((err) => {
+          console.log("Error attempting to exit fullscreen:", err);
+        });
+      }
+    } catch (e) {
+      console.log(e);
+    }
   };
 
   if (!isSubmitted) {
@@ -182,7 +207,7 @@ export default function Home() {
                 <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
               </svg>
             </button>
-            <button className={styles.selesaiBtn} onClick={() => setIsSubmitted(false)}>Selesai</button>
+            <button className={styles.selesaiBtn} onClick={handleSelesai}>Selesai</button>
           </div>
         </div>
       </div>

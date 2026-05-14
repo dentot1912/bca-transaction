@@ -30,7 +30,7 @@
   background-size: 120px auto;
   background-repeat: repeat;
   transform: rotate(0deg);
-  opacity: 0.06;
+  opacity: 0.08;
   pointer-events: none;
   z-index: 1;
 }
