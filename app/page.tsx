@@ -169,7 +169,7 @@ export default function Home() {
           <div className={styles.detailsSection}>
             <div className={`${styles.detailRow} ${styles.borderedBottom}`}>
               <div className={styles.detailLabel}>Pembayaran ke</div>
-              <div className={`${styles.detailValue} ${styles.uppercase}`}>
+              <div className={`${styles.detailValue}`}>
                 {paymentTo}
               </div>
             </div>
