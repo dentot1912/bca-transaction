@@ -175,7 +175,7 @@ export default function Home() {
                 <polyline points="15 18 9 12 15 6"></polyline>
               </svg>
             </button>
-            <img src="/bca-bank-central-asia-logo.svg" alt="BCA Logo" className={styles.bcaLogoImage} />
+            <img src="/bca-bank-central-asia-logo.png" alt="BCA Logo" className={styles.bcaLogoImage} />
           </div>
 
           <div className={styles.separator}></div>
