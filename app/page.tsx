@@ -11,6 +11,13 @@ export default function Home() {
   const [amount, setAmount] = useState('');
   const [paymentTo, setPaymentTo] = useState('');
   const [timestamp, setTimestamp] = useState('');
+  const [rrn, setRrn] = useState('');
+
+  const addAmount = (valueToAdd: number) => {
+    const currentVal = parseInt(amountInput.replace(/\D/g, ''), 10) || 0;
+    const newVal = currentVal + valueToAdd;
+    setAmountInput(newVal.toLocaleString('en-US'));
+  };
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     // Remove all non-digit characters
@@ -48,6 +55,10 @@ export default function Home() {
     const seconds = now.getSeconds().toString().padStart(2, '0');
 
     setTimestamp(`${day} ${month} ${year} ${hours}:${minutes}:${seconds}`);
+    
+    const randomRrn = Math.floor(Math.random() * 1000000000).toString().padStart(9, '0');
+    setRrn(randomRrn);
+
     setIsSubmitted(true);
 
     try {
@@ -99,6 +110,16 @@ export default function Home() {
                     className={styles.inputField}
                     required
                   />
+                  <div className={styles.shortcutContainer}>
+                    <button 
+                      type="button" 
+                      onClick={() => setPaymentToInput('Ciemilan Payakumbuh')}
+                      className={styles.shortcutBtn}
+                      style={{ flex: 'none' }}
+                    >
+                      Ciemilan Payakumbuh
+                    </button>
+                  </div>
                 </div>
                 
                 <div className={styles.inputGroup}>
@@ -112,6 +133,18 @@ export default function Home() {
                     className={styles.inputField}
                     required
                   />
+                  <div className={styles.shortcutContainer}>
+                    {[1000, 5000, 10000, 20000, 50000, 100000].map(val => (
+                      <button 
+                        key={val} 
+                        type="button" 
+                        onClick={() => addAmount(val)}
+                        className={styles.shortcutBtn}
+                      >
+                        +{val.toLocaleString('id-ID')}
+                      </button>
+                    ))}
+                  </div>
                 </div>
                 
                 <button 
@@ -137,7 +170,12 @@ export default function Home() {
         <div className={styles.content}>
           {/* Header */}
           <div className={styles.header}>
-            <img src="/bca-bank-central-asia-logo.svg" alt="BCA Logo" className={styles.bcaLogoImage} />
+            <button type="button" className={styles.backButton} onClick={handleSelesai}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="15 18 9 12 15 6"></polyline>
+              </svg>
+            </button>
+            <img src="/bca-bank-central-asia-logo.png" alt="BCA Logo" className={styles.bcaLogoImage} />
           </div>
 
           <div className={styles.separator}></div>
@@ -177,13 +215,13 @@ export default function Home() {
             <div className={styles.detailRowGroup}>
               <div className={styles.detailRow}>
                 <div className={styles.detailLabel}>Pengakuisisi</div>
-                <div className={styles.detailValue}>GOPAY</div>
+                <div className={styles.detailValue}>BCA</div>
               </div>
 
               <div className={`${styles.detailRow} ${styles.borderedBottom} ${styles.borderedTop}`}>
                 <div className={styles.detailLabel}>RRN</div>
                 <div className={styles.detailValue}>
-                  328749151
+                  {rrn}
                 </div>
               </div>
             </div>

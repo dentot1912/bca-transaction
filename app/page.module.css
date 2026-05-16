@@ -30,7 +30,7 @@
   background-size: 120px auto;
   background-repeat: repeat;
   transform: rotate(0deg);
-  opacity: 0.08;
+  opacity: 0.1;
   pointer-events: none;
   z-index: 1;
 }
@@ -56,17 +56,36 @@
   justify-content: center;
   align-items: center;
   padding: 20px 0 0 0;
+  position: relative;
+}
+
+.backButton {
+  position: absolute;
+  left: 0;
+  background: none;
+  border: none;
+  color: #005b9f;
+  cursor: pointer;
+  padding: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .bcaLogoImage {
-  width: 90px;
+  width: 120px;
   height: auto;
   object-fit: contain;
 }
 
 .separator {
-  border-top: 1px dashed #d0d0d0;
+  height: 1.5px;
+  background-image: linear-gradient(to right, #d0d0d0 50%, transparent 50%);
+  background-size: calc(100% / 32) 1.5px;
+  background-repeat: repeat-x;
   margin: 0 0 35px 0;
+  border: none;
+  opacity: 0.8;
 }
 
 .successSection {
@@ -369,4 +388,33 @@
 .submitBtn:active {
   transform: translateY(2px);
   box-shadow: 0 4px 10px rgba(0, 61, 121, 0.25);
+}
+
+.shortcutContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.shortcutBtn {
+  background-color: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  color: #005b9f;
+  border-radius: 8px;
+  padding: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex: 1 1 calc(33.333% - 8px);
+}
+
+.shortcutBtn:hover {
+  background-color: #e2e8f0;
+}
+
+.shortcutBtn:active {
+  background-color: #cbd5e1;
+  transform: scale(0.98);
 }
