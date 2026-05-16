@@ -11,6 +11,7 @@
   width: 100%;
   max-width: 400px;
   height: 100dvh;
+  min-height: 100dvh;
   max-height: 850px;
   background-color: white;
   position: relative;
@@ -261,6 +262,10 @@
 }
 
 @media (max-width: 480px) {
+  .container {
+    align-items: flex-start;
+  }
+
   .mobileFrame {
     max-width: 100%;
     height: 100dvh;
@@ -278,44 +283,62 @@
   }
 }
 
-/* Form Generator Styles - m-BCA CLONE */
+/* Form Generator Styles - EXACT m-BCA CLONE */
 .formContainer {
   background-color: #f0f2f5;
   flex: 1;
   display: flex;
   flex-direction: column;
+  height: 100%;
 }
 
 .appHeader {
   background-color: #0066ae;
-  padding: 18px 20px;
+  padding: 16px 20px;
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 12px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   z-index: 10;
+  position: sticky;
+  top: 0;
 }
 
 .appHeaderTitle {
   color: white;
-  font-size: 18px;
-  font-weight: 700;
+  font-size: 17px;
+  font-weight: 600;
   margin: 0;
+  letter-spacing: 0.3px;
+}
+
+.receiptBackBtn {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  margin-left: -4px;
 }
 
 .formContent {
-  padding: 20px;
+  padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 16px;
   overflow-y: auto;
+  flex: 1;
+  background-color: #f0f2f5;
 }
 
 .inputCard {
   background: white;
-  border-radius: 12px;
-  padding: 20px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  border-radius: 10px;
+  padding: 18px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
 }
 
 .inputGroup {
@@ -334,7 +357,6 @@
   font-weight: 600;
   margin-bottom: 8px;
   text-transform: none;
-  letter-spacing: 0;
 }
 
 .inputField {
@@ -367,30 +389,27 @@
   justify-content: center;
   gap: 10px;
   cursor: pointer;
-  transition: all 0.2s;
 }
 
-.scanButtonLarge:active {
-  background-color: #f0f7ff;
-  transform: scale(0.98);
+.formFooter {
+  padding: 12px 20px 24px 20px;
+  background-color: white;
+  border-top: 1px solid #eee;
+  display: flex;
+  flex-direction: column;
 }
 
 .submitButtonLarge {
   background-color: #0066ae;
   color: white;
   border: none;
-  border-radius: 30px;
-  padding: 16px;
+  border-radius: 28px;
+  width: 100%;
+  padding: 14px;
   font-size: 16px;
   font-weight: 700;
-  margin-top: 10px;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(0, 102, 174, 0.2);
-}
-
-.submitButtonLarge:active {
-  background-color: #005691;
-  transform: translateY(2px);
+  box-shadow: 0 4px 10px rgba(0, 102, 174, 0.2);
 }
 
 .shortcutLabel {
@@ -416,6 +435,116 @@
   cursor: pointer;
 }
 
-.shortcutBtn:active {
-  background-color: #e2e8f0;
+.processingOverlay {
+  position: absolute;
+  inset: 0;
+  background-color: #0066ae;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  color: white;
+}
+
+.loader {
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 16px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.submitButtonModern:active {
+  transform: scale(0.98);
+  background: #e2e8f0;
+}
+
+.processingOverlay {
+  position: absolute;
+  inset: 0;
+  background: #0f172a;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.loader {
+  width: 48px;
+  height: 48px;
+  border: 5px solid #1e293b;
+  border-bottom-color: #38bdf8;
+  border-radius: 50%;
+  animation: rotation 1s linear infinite;
+  margin-bottom: 20px;
+}
+
+@keyframes rotation {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Modern Toast Notification Styles */
+.toastContainer {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  width: 90%;
+  pointer-events: none;
+  display: flex;
+  justify-content: center;
+}
+
+.toast {
+  padding: 12px 20px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #1c1c1e;
+  font-size: 14px;
+  font-weight: 600;
+  animation: toastSlideDown 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.toast.success {
+  border-left: 5px solid #34c759;
+}
+
+.toast.error {
+  border-left: 5px solid #ff3b30;
+}
+
+.toast.info {
+  border-left: 5px solid #007aff;
+}
+
+.toast.success svg { color: #34c759; }
+.toast.error svg { color: #ff3b30; }
+.toast.info svg { color: #007aff; }
+
+@keyframes toastSlideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

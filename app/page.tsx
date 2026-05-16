@@ -16,10 +16,16 @@ export default function Home() {
   const [acquirer, setAcquirer] = useState('BCA');
   const [timestamp, setTimestamp] = useState('');
   const [rrn, setRrn] = useState('');
+  const [toast, setToast] = useState<{ message: string, type: 'success' | 'error' | 'info' } | null>(null);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const scanningRef = useRef(false);
+
+  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
 
   useEffect(() => {
     return () => {
@@ -63,7 +69,7 @@ export default function Home() {
       }
     } catch (err) {
       console.error("Error accessing camera: ", err);
-      alert("Tidak dapat mengakses kamera. Pastikan izin kamera diberikan.");
+      showToast("Tidak dapat mengakses kamera. Pastikan izin kamera diberikan.", 'error');
       setIsScanning(false);
       scanningRef.current = false;
     }
@@ -150,7 +156,7 @@ export default function Home() {
       setAcquirerInput(foundAcquirer);
     }
 
-    alert('QRIS Berhasil dipindai');
+    showToast('QRIS Berhasil dipindai', 'success');
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -175,7 +181,7 @@ export default function Home() {
           handleQRResult(code.data);
           if (isScanning) stopCamera();
         } else {
-          alert('Gambar tidak mengandung QR code yang valid');
+          showToast('Gambar tidak mengandung QR code yang valid', 'error');
         }
       };
       img.src = event.target?.result as string;
@@ -264,6 +270,19 @@ export default function Home() {
     return (
       <div className={styles.container}>
         <div className={styles.mobileFrame} style={{ backgroundColor: '#000' }}>
+          {toast && (
+            <div className={styles.toastContainer}>
+              <div className={`${styles.toast} ${styles[toast.type]}`}>
+                {toast.type === 'success' && (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                )}
+                {toast.type === 'error' && (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                )}
+                <span>{toast.message}</span>
+              </div>
+            </div>
+          )}
           <div style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
             <video
               ref={videoRef}
@@ -276,10 +295,13 @@ export default function Home() {
               position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
               display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
               pointerEvents: 'none',
-              zIndex: 10
+              zIndex: 10,
+              padding: '20px'
             }}>
               <div style={{
-                width: '260px', height: '260px',
+                width: '100%',
+                maxWidth: '260px',
+                aspectRatio: '1/1',
                 position: 'relative',
                 boxShadow: '0 0 0 4000px rgba(0, 0, 0, 0.65)',
                 borderRadius: '16px'
@@ -297,7 +319,7 @@ export default function Home() {
                   animation: 'scan 2s infinite ease-in-out'
                 }}></div>
               </div>
-              <p style={{ color: 'white', marginTop: '40px', fontSize: '15px', fontWeight: '500', letterSpacing: '0.5px' }}>
+              <p style={{ color: 'white', marginTop: '30px', fontSize: '15px', fontWeight: '500', letterSpacing: '0.5px', textAlign: 'center' }}>
                 Arahkan kamera ke QR Code
               </p>
             </div>
@@ -354,7 +376,22 @@ export default function Home() {
     return (
       <div className={styles.container}>
         <div className={styles.mobileFrame}>
+          {toast && (
+            <div className={styles.toastContainer}>
+              <div className={`${styles.toast} ${styles[toast.type]}`}>
+                {toast.type === 'success' && (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                )}
+                {toast.type === 'error' && (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                )}
+                <span>{toast.message}</span>
+              </div>
+            </div>
+          )}
+
           <div className={styles.formContainer}>
+
             <div className={styles.appHeader}>
               <button type="button" className={styles.receiptBackBtn} style={{ padding: 0 }}>
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -363,7 +400,7 @@ export default function Home() {
               </button>
               <h2 className={styles.appHeaderTitle}>m-Transfer</h2>
             </div>
-            
+
             <div className={styles.formContent}>
               <button
                 type="button"
@@ -377,14 +414,14 @@ export default function Home() {
                 </svg>
                 <span>Scan QRIS</span>
               </button>
-              
-              <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+
+              <form id="qris-form" onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                 <div className={styles.inputCard}>
                   <div className={styles.inputGroup}>
                     <label className={styles.inputLabel}>Pembayaran ke</label>
-                    <input 
-                      type="text" 
-                      value={paymentToInput} 
+                    <input
+                      type="text"
+                      value={paymentToInput}
                       onChange={(e) => setPaymentToInput(e.target.value)}
                       placeholder="Nama Merchant"
                       className={styles.inputField}
@@ -393,8 +430,8 @@ export default function Home() {
                     <div style={{ marginTop: '12px' }}>
                       <div className={styles.shortcutLabel}>Favorit:</div>
                       <div className={styles.shortcutContainer}>
-                        <button 
-                          type="button" 
+                        <button
+                          type="button"
                           onClick={() => setPaymentToInput('Ciemilan Payakumbuh')}
                           className={styles.shortcutBtn}
                         >
@@ -406,22 +443,22 @@ export default function Home() {
 
                   <div className={styles.inputGroup}>
                     <label className={styles.inputLabel}>Pengakuisisi</label>
-                    <input 
-                      type="text" 
-                      value={acquirerInput} 
+                    <input
+                      type="text"
+                      value={acquirerInput}
                       onChange={(e) => setAcquirerInput(e.target.value)}
                       placeholder="BCA / MANDIRI / etc"
                       className={styles.inputField}
                       required
                     />
                   </div>
-                  
+
                   <div className={styles.inputGroup}>
                     <label className={styles.inputLabel}>Nominal (IDR)</label>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       inputMode="numeric"
-                      value={amountInput} 
+                      value={amountInput}
                       onChange={handleAmountChange}
                       placeholder="0"
                       className={styles.inputField}
@@ -431,9 +468,9 @@ export default function Home() {
                       <div className={styles.shortcutLabel}>Cepat:</div>
                       <div className={styles.shortcutContainer}>
                         {[10000, 20000, 50000, 100000].map(val => (
-                          <button 
-                            key={val} 
-                            type="button" 
+                          <button
+                            key={val}
+                            type="button"
                             onClick={() => addAmount(val)}
                             className={styles.shortcutBtn}
                           >
@@ -444,13 +481,16 @@ export default function Home() {
                     </div>
                   </div>
                 </div>
-                
-                <button 
-                  type="submit"
-                  className={styles.submitButtonLarge}
-                >
-                  SEND
-                </button>
+
+                <div className={styles.formFooter}>
+                  <button
+                    type="submit"
+                    form="qris-form"
+                    className={styles.submitButtonLarge}
+                  >
+                    SEND
+                  </button>
+                </div>
               </form>
             </div>
           </div>
@@ -462,6 +502,19 @@ export default function Home() {
   return (
     <div className={styles.container}>
       <div className={styles.mobileFrame}>
+        {toast && (
+          <div className={styles.toastContainer}>
+            <div className={`${styles.toast} ${styles[toast.type]}`}>
+              {toast.type === 'success' && (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              )}
+              {toast.type === 'error' && (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+              )}
+              <span>{toast.message}</span>
+            </div>
+          </div>
+        )}
         {/* Watermark Background */}
         <div className={styles.watermark}></div>
 
