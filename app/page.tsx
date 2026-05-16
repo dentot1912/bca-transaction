@@ -1,17 +1,119 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
+import jsQR from 'jsqr';
 import styles from './page.module.css';
 
 export default function Home() {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [amountInput, setAmountInput] = useState('');
   const [paymentToInput, setPaymentToInput] = useState('');
+  const [acquirerInput, setAcquirerInput] = useState('BCA');
   
   const [amount, setAmount] = useState('');
   const [paymentTo, setPaymentTo] = useState('');
+  const [acquirer, setAcquirer] = useState('BCA');
   const [timestamp, setTimestamp] = useState('');
   const [rrn, setRrn] = useState('');
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const parseEMVQR = (payload: string) => {
+    let index = 0;
+    const tags: Record<string, string> = {};
+    
+    while (index < payload.length) {
+      const tag = payload.substring(index, index + 2);
+      index += 2;
+      if (index >= payload.length) break;
+      
+      const lengthStr = payload.substring(index, index + 2);
+      index += 2;
+      
+      const length = parseInt(lengthStr, 10);
+      if (isNaN(length)) break;
+      
+      const value = payload.substring(index, index + length);
+      index += length;
+      
+      tags[tag] = value;
+    }
+    return tags;
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+        
+        ctx.drawImage(img, 0, 0, img.width, img.height);
+        const imageData = ctx.getImageData(0, 0, img.width, img.height);
+        const code = jsQR(imageData.data, imageData.width, imageData.height);
+        
+        if (code) {
+          const tags = parseEMVQR(code.data);
+          
+          // Tag 59 is Merchant Name
+          if (tags['59']) {
+            setPaymentToInput(tags['59']);
+          }
+
+          // Determine Acquirer from Tags 26-51
+          const acquirerMap: Record<string, string> = {
+            'ID.CO.BCA.WWW': 'BCA',
+            'ID.CO.MANDIRI.WWW': 'MANDIRI',
+            'ID.CO.BNI.WWW': 'BNI',
+            'ID.CO.BRI.WWW': 'BRI',
+            'ID.CO.CIMB.WWW': 'CIMB NIAGA',
+            'ID.CO.DANA.WWW': 'DANA',
+            'ID.CO.GOPAY.WWW': 'GOPAY',
+            'ID.CO.OVO.WWW': 'OVO',
+            'ID.CO.SHOPEE.WWW': 'SHOPEEPAY',
+            'ID.CO.LINKAJA.WWW': 'LINKAJA'
+          };
+
+          let foundAcquirer = '';
+          for (let i = 26; i <= 51; i++) {
+            const tag = i.toString().padStart(2, '0');
+            if (tags[tag]) {
+               const subTags = parseEMVQR(tags[tag]);
+               if (subTags['00']) {
+                 const guid = subTags['00'].toUpperCase();
+                 if (acquirerMap[guid]) {
+                   foundAcquirer = acquirerMap[guid];
+                 } else if (guid.startsWith('ID.CO.') && guid.endsWith('.WWW')) {
+                   const parts = guid.split('.');
+                   if (parts.length >= 3 && parts[2] !== 'QRIS') {
+                     foundAcquirer = parts[2].toUpperCase();
+                   }
+                 }
+               }
+            }
+          }
+          if (foundAcquirer) {
+            setAcquirerInput(foundAcquirer);
+          }
+          
+          alert('QRIS Berhasil dipindai');
+        } else {
+          alert('Gambar tidak mengandung QR code yang valid');
+        }
+      };
+      img.src = event.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+    // Reset file input so same file can be selected again
+    e.target.value = '';
+  };
 
   const addAmount = (valueToAdd: number) => {
     const currentVal = parseInt(amountInput.replace(/\D/g, ''), 10) || 0;
@@ -43,6 +145,7 @@ export default function Home() {
 
     setAmount(formatAmount(amountInput));
     setPaymentTo(paymentToInput);
+    setAcquirer(acquirerInput);
 
     // Format date like: "28 Mar 2026 07:54:54"
     const now = new Date();
@@ -100,6 +203,30 @@ export default function Home() {
               </div>
               
               <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    ref={fileInputRef}
+                    onChange={handleFileUpload}
+                    style={{ display: 'none' }}
+                  />
+                  <button
+                    type="button"
+                    className={styles.submitBtn}
+                    style={{ backgroundColor: '#f0f0f0', color: '#0066AE', border: '1px solid #0066AE' }}
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '8px', display: 'inline-block', verticalAlign: 'middle' }}>
+                      <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                      <line x1="9" y1="9" x2="15" y2="15"></line>
+                      <line x1="15" y1="9" x2="9" y2="15"></line>
+                    </svg>
+                    <span style={{ verticalAlign: 'middle' }}>Scan QRIS</span>
+                  </button>
+                </div>
+                
                 <div className={styles.inputGroup}>
                   <label className={styles.inputLabel}>Pembayaran ke</label>
                   <input 
@@ -120,6 +247,18 @@ export default function Home() {
                       Ciemilan Payakumbuh
                     </button>
                   </div>
+                </div>
+
+                <div className={styles.inputGroup}>
+                  <label className={styles.inputLabel}>Pengakuisisi</label>
+                  <input 
+                    type="text" 
+                    value={acquirerInput} 
+                    onChange={(e) => setAcquirerInput(e.target.value)}
+                    placeholder="Contoh: BCA, MANDIRI"
+                    className={styles.inputField}
+                    required
+                  />
                 </div>
                 
                 <div className={styles.inputGroup}>
@@ -215,7 +354,7 @@ export default function Home() {
             <div className={styles.detailRowGroup}>
               <div className={styles.detailRow}>
                 <div className={styles.detailLabel}>Pengakuisisi</div>
-                <div className={styles.detailValue}>BCA</div>
+                <div className={styles.detailValue}>{acquirer}</div>
               </div>
 
               <div className={`${styles.detailRow} ${styles.borderedBottom} ${styles.borderedTop}`}>
