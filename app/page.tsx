@@ -239,31 +239,12 @@ export default function Home() {
     setRrn(randomRrn);
 
     setIsSubmitted(true);
-
-    try {
-      if (document.documentElement.requestFullscreen) {
-        document.documentElement.requestFullscreen().catch((err) => {
-          console.log("Error attempting to enable fullscreen:", err);
-        });
-      }
-    } catch (e) {
-      console.log(e);
-    }
   };
 
   const handleSelesai = () => {
     setIsSubmitted(false);
     setAmountInput('');
     setPaymentToInput('');
-    try {
-      if (document.exitFullscreen) {
-        document.exitFullscreen().catch((err) => {
-          console.log("Error attempting to exit fullscreen:", err);
-        });
-      }
-    } catch (e) {
-      console.log(e);
-    }
   };
 
   if (isScanning) {
