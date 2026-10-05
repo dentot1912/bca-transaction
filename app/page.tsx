@@ -171,8 +171,39 @@ export default function Home() {
       }
     }
 
-    // Determine Acquirer from Tags 26-51
-    const acquirerMap: Record<string, string> = {
+    // Determine Acquirer from Tags 26-51 (Merchant Account Information)
+    const nnsMap: Record<string, string> = {
+      '93600002': 'BRI',
+      '93600008': 'MANDIRI',
+      '93600009': 'BNI',
+      '93600013': 'PERMATA',
+      '93600014': 'BCA',
+      '93600022': 'CIMB NIAGA',
+      '93600110': 'BJB',
+      '93600111': 'BANK DKI',
+      '93600147': 'MUAMALAT',
+      '93600200': 'BTN',
+      '93600213': 'BTPN / JENIUS',
+      '93600426': 'BANK MEGA',
+      '93600451': 'BSI',
+      '93600501': 'BCA DIGITAL (BLU)',
+      '93600503': 'NOBU',
+      '93600542': 'BANK JAGO',
+      '93600567': 'ALLO BANK',
+      '93600815': 'INTERACTIVE / SPEEDCASH',
+      '93600822': 'ASTRAPAY',
+      '93600911': 'LINKAJA',
+      '93600912': 'OVO',
+      '93600914': 'GOPAY',
+      '93600915': 'DANA',
+      '93600916': 'KASPRO',
+      '93600917': 'PAYTREN',
+      '93600918': 'SHOPEEPAY',
+      '93600919': 'ISAKU',
+      '93600920': 'DOKU'
+    };
+
+    const guidMap: Record<string, string> = {
       'ID.CO.BCA.WWW': 'BCA',
       'ID.CO.MANDIRI.WWW': 'MANDIRI',
       'ID.CO.BNI.WWW': 'BNI',
@@ -180,32 +211,60 @@ export default function Home() {
       'ID.CO.CIMB.WWW': 'CIMB NIAGA',
       'ID.CO.DANA.WWW': 'DANA',
       'ID.CO.GOPAY.WWW': 'GOPAY',
+      'ID.CO.GO-PAY.WWW': 'GOPAY',
       'ID.CO.OVO.WWW': 'OVO',
       'ID.CO.SHOPEE.WWW': 'SHOPEEPAY',
-      'ID.CO.LINKAJA.WWW': 'LINKAJA'
+      'ID.CO.SHOPEEPAY.WWW': 'SHOPEEPAY',
+      'ID.CO.LINKAJA.WWW': 'LINKAJA',
+      'ID.CO.TELKOM.LINKAJA': 'LINKAJA',
+      'ID.CO.ASTRAPAY.WWW': 'ASTRAPAY',
+      'ID.CO.NOBU.WWW': 'NOBU',
+      'ID.CO.JAGO.WWW': 'BANK JAGO',
+      'ID.CO.ALLOBANK.WWW': 'ALLO BANK'
     };
 
     let foundAcquirer = '';
+    let foundPan = '';
+
     for (let i = 26; i <= 51; i++) {
       const tag = i.toString().padStart(2, '0');
       if (tags[tag]) {
         const subTags = parseEMVQR(tags[tag]);
-        if (subTags['00']) {
+        
+        if (subTags['01']) {
+          foundPan = subTags['01'];
+          setMerchantPan(foundPan);
+
+          // Cek berdasarkan NNS (8 digit pertama dari Merchant PAN)
+          const nns8 = foundPan.substring(0, 8);
+          if (nnsMap[nns8]) {
+            foundAcquirer = nnsMap[nns8];
+          }
+        }
+
+        if (!foundAcquirer && subTags['00']) {
           const guid = subTags['00'].toUpperCase();
-          if (acquirerMap[guid]) {
-            foundAcquirer = acquirerMap[guid];
-          } else if (guid.startsWith('ID.CO.') && guid.endsWith('.WWW')) {
-            const parts = guid.split('.');
-            if (parts.length >= 3 && parts[2] !== 'QRIS') {
-              foundAcquirer = parts[2].toUpperCase();
+          if (guidMap[guid]) {
+            foundAcquirer = guidMap[guid];
+          } else {
+            // Regex match ID.CO.<NAME>.WWW or similar
+            const match = guid.match(/ID\.(?:CO|OR)\.([A-Z0-9_-]+)(?:\.WWW)?/i);
+            if (match && match[1] && match[1] !== 'QRIS') {
+              foundAcquirer = match[1].replace(/[-_]/g, ' ').toUpperCase();
             }
           }
         }
-        if (subTags['01']) {
-          setMerchantPan(subTags['01']);
-        }
       }
     }
+
+    // Jika tag 26-51 belum menemukan acquirer, coba cek tag 51 khusus / fallback
+    if (foundPan && !foundAcquirer) {
+      const nns8 = foundPan.substring(0, 8);
+      if (nnsMap[nns8]) {
+        foundAcquirer = nnsMap[nns8];
+      }
+    }
+
     if (foundAcquirer) {
       setAcquirerInput(foundAcquirer);
     }
@@ -217,6 +276,8 @@ export default function Home() {
         setMerchantRef(addData['01']);
       } else if (addData['05']) {
         setMerchantRef(addData['05']);
+      } else if (addData['07']) {
+        setMerchantRef(addData['07']);
       }
     }
   };
