@@ -8,8 +8,14 @@ export default function Home() {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
   const [amountInput, setAmountInput] = useState('');
-  const [paymentToInput, setPaymentToInput] = useState('');
+  const [paymentToInput, setPaymentToInput] = useState('FFROKKYS, Fashion');
   const [acquirerInput, setAcquirerInput] = useState('BCA');
+  const [merchantCity, setMerchantCity] = useState('PAYAKUMBUH, 26218, ID');
+  const [merchantPan, setMerchantPan] = useState('9360091435851418084');
+  const [merchantRef, setMerchantRef] = useState('014662486068');
+  const [sourceAccount, setSourceAccount] = useState('614 - 538 - 4188');
+  const [sourceAccountType, setSourceAccountType] = useState('TAHAPAN XPRESI - IDR');
+  const [showKeyboard, setShowKeyboard] = useState(true);
 
   const [amount, setAmount] = useState('');
   const [paymentTo, setPaymentTo] = useState('');
@@ -17,6 +23,37 @@ export default function Home() {
   const [timestamp, setTimestamp] = useState('');
   const [rrn, setRrn] = useState('');
   const [toast, setToast] = useState<{ message: string, type: 'success' | 'error' | 'info' } | null>(null);
+
+  const handleKeypadPress = (val: string) => {
+    const currentClean = amountInput.replace(/\D/g, '');
+    let nextVal = currentClean;
+    if (val === '000') {
+      if (currentClean && currentClean !== '0') {
+        nextVal = currentClean + '000';
+      }
+    } else {
+      if (currentClean === '0') {
+        nextVal = val;
+      } else {
+        nextVal = currentClean + val;
+      }
+    }
+    if (nextVal.length > 12) return; // Prevent overflow
+    const num = parseInt(nextVal, 10);
+    setAmountInput(isNaN(num) || num === 0 ? '' : num.toLocaleString('en-US'));
+  };
+
+  const handleKeypadBackspace = () => {
+    const currentClean = amountInput.replace(/\D/g, '');
+    if (!currentClean) return;
+    const nextVal = currentClean.slice(0, -1);
+    if (!nextVal) {
+      setAmountInput('');
+    } else {
+      const num = parseInt(nextVal, 10);
+      setAmountInput(num.toLocaleString('en-US'));
+    }
+  };
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -120,6 +157,20 @@ export default function Home() {
       setPaymentToInput(tags['59']);
     }
 
+    // Tag 60 (City), 61 (Postal Code), 58 (Country Code)
+    const city = tags['60'] || 'PAYAKUMBUH';
+    const postal = tags['61'] || '26218';
+    const country = tags['58'] || 'ID';
+    setMerchantCity(`${city}, ${postal}, ${country}`);
+
+    // Tag 54 (Transaction Amount if dynamic QR)
+    if (tags['54']) {
+      const parsedAmount = parseFloat(tags['54']);
+      if (!isNaN(parsedAmount) && parsedAmount > 0) {
+        setAmountInput(parsedAmount.toLocaleString('en-US'));
+      }
+    }
+
     // Determine Acquirer from Tags 26-51
     const acquirerMap: Record<string, string> = {
       'ID.CO.BCA.WWW': 'BCA',
@@ -150,13 +201,24 @@ export default function Home() {
             }
           }
         }
+        if (subTags['01']) {
+          setMerchantPan(subTags['01']);
+        }
       }
     }
     if (foundAcquirer) {
       setAcquirerInput(foundAcquirer);
     }
 
-    showToast('QRIS Berhasil dipindai', 'success');
+    // Reference from Tag 62 or random default
+    if (tags['62']) {
+      const addData = parseEMVQR(tags['62']);
+      if (addData['01']) {
+        setMerchantRef(addData['01']);
+      } else if (addData['05']) {
+        setMerchantRef(addData['05']);
+      }
+    }
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -250,7 +312,7 @@ export default function Home() {
   if (isScanning) {
     return (
       <div className={styles.container}>
-        <div className={styles.mobileFrame} style={{ backgroundColor: '#000' }}>
+        <div className={styles.mobileFrame} style={{ backgroundColor: '#020b14', position: 'relative', overflow: 'hidden' }}>
           {toast && (
             <div className={styles.toastContainer}>
               <div className={`${styles.toast} ${styles[toast.type]}`}>
@@ -264,6 +326,7 @@ export default function Home() {
               </div>
             </div>
           )}
+
           <div style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
             <video
               ref={videoRef}
@@ -271,80 +334,313 @@ export default function Home() {
             />
             <canvas ref={canvasRef} style={{ display: 'none' }} />
 
-            {/* Overlay */}
+            {/* Dark camera backdrop gradient */}
             <div style={{
-              position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
-              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+              background: 'radial-gradient(ellipse at 50% 15%, rgba(6, 26, 46, 0.45) 0%, rgba(1, 4, 8, 0.92) 85%)',
+              pointerEvents: 'none',
+              zIndex: 5
+            }} />
+
+            {/* Header Navigation */}
+            <div style={{
+              position: 'absolute',
+              left: 0,
+              width: '100%',
+              padding: '10px 16px',
+              zIndex: 30,
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                <button
+                  onClick={stopCamera}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: '#ffffff',
+                    cursor: 'pointer',
+                    padding: '4px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                >
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="15 19 8 12 15 5"></polyline>
+                  </svg>
+                </button>
+                <span style={{ color: '#ffffff', fontWeight: '600', fontSize: '18px', letterSpacing: '-0.2px' }}>
+                  Scan QRIS
+                </span>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                {/* Image Gallery Upload Icon */}
+                <label style={{
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '24px',
+                  height: '24px',
+                  flexShrink: 0
+                }}>
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                    {/* Outer rounded rectangle frame */}
+                    <rect x="3" y="3" width="18" height="18" rx="3" stroke="#ffffff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+                    {/* Sun/circle */}
+                    <circle cx="8" cy="8.5" r="2" fill="#ffffff" />
+                    {/* Mountain triangle */}
+                    <path d="M4 19L9.5 12.5L14 18M13 17L15.5 13.5L20 19" stroke="#ffffff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  <input type="file" accept="image/*" onChange={handleFileUpload} style={{ display: 'none' }} />
+                </label>
+
+                {/* Flashlight Disabled / Crossed Star Icon */}
+                <button
+                  type="button"
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: '#ffffff',
+                    cursor: 'pointer',
+                    padding: 0,
+                    width: '24px',
+                    height: '24px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0
+                  }}
+                  onClick={() => showToast('Flashlight tidak tersedia', 'info')}
+                >
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                    {/* Lightning bolt shape */}
+                    <path
+                      d="M13 2L4 13H11L10 22L20 10H13L13 2Z"
+                      fill="#ffffff"
+                    />
+                    {/* Diagonal slash line across the flash */}
+                    <line
+                      x1="4"
+                      y1="4"
+                      x2="20"
+                      y2="20"
+                      stroke="#020b14"
+                      strokeWidth="3.2"
+                      strokeLinecap="round"
+                    />
+                    <line
+                      x1="4"
+                      y1="4"
+                      x2="20"
+                      y2="20"
+                      stroke="#ffffff"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            {/* Single Blue Laser with Long Transparent Fading Tail */}
+            <div style={{
+              position: 'absolute',
+              top: '60px',
+              bottom: '160px',
+              left: 0,
+              width: '100%',
               pointerEvents: 'none',
               zIndex: 10,
-              padding: '20px'
+              overflow: 'hidden'
             }}>
               <div style={{
+                position: 'absolute',
+                left: 0,
                 width: '100%',
-                maxWidth: '260px',
-                aspectRatio: '1/1',
-                position: 'relative',
-                boxShadow: '0 0 0 4000px rgba(0, 0, 0, 0.65)',
-                borderRadius: '16px'
+                height: '180px',
+                background: 'linear-gradient(to bottom, rgba(0, 162, 255, 0.42) 0%, rgba(0, 130, 255, 0.18) 30%, rgba(0, 100, 255, 0.03) 70%, transparent 100%)',
+                animation: 'blueLaserScan 2.6s cubic-bezier(0.4, 0, 0.2, 1) infinite'
               }}>
-                {/* Corner markers */}
-                <div style={{ position: 'absolute', top: '-2px', left: '-2px', width: '40px', height: '40px', borderTop: '4px solid #fff', borderLeft: '4px solid #fff', borderTopLeftRadius: '16px' }}></div>
-                <div style={{ position: 'absolute', top: '-2px', right: '-2px', width: '40px', height: '40px', borderTop: '4px solid #fff', borderRight: '4px solid #fff', borderTopRightRadius: '16px' }}></div>
-                <div style={{ position: 'absolute', bottom: '-2px', left: '-2px', width: '40px', height: '40px', borderBottom: '4px solid #fff', borderLeft: '4px solid #fff', borderBottomLeftRadius: '16px' }}></div>
-                <div style={{ position: 'absolute', bottom: '-2px', right: '-2px', width: '40px', height: '40px', borderBottom: '4px solid #fff', borderRight: '4px solid #fff', borderBottomRightRadius: '16px' }}></div>
-
-                {/* Scanning animation line */}
-                <div style={{
-                  width: '100%', height: '2px', backgroundColor: '#0066AE',
-                  position: 'absolute', top: '50%', boxShadow: '0 0 10px #0066AE',
-                  animation: 'scan 2s infinite ease-in-out'
-                }}></div>
               </div>
-              <p style={{ color: 'white', marginTop: '30px', fontSize: '15px', fontWeight: '500', letterSpacing: '0.5px', textAlign: 'center' }}>
-                Arahkan kamera ke QR Code
-              </p>
             </div>
 
-            {/* Header controls */}
-            <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', padding: '20px', zIndex: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <button
-                onClick={stopCamera}
-                style={{
-                  background: 'rgba(0,0,0,0.5)', color: 'white', border: 'none', borderRadius: '50%', width: '44px', height: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', backdropFilter: 'blur(4px)'
-                }}
-              >
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="18" y1="6" x2="6" y2="18"></line>
-                  <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
-              </button>
-              <div style={{ color: 'white', fontWeight: '600', fontSize: '16px' }}>Scan QRIS</div>
-              <div style={{ width: '44px' }}></div>
+            {/* Center Area QRIS SUPPORTED Branding Logo */}
+            <div style={{
+              position: 'absolute',
+              bottom: '165px',
+              left: 0,
+              width: '100%',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 20,
+              pointerEvents: 'none'
+            }}>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <img
+                  src="/qrislogo.png"
+                  alt="QRIS"
+                  style={{
+                    height: '72px',
+                    width: 'auto',
+                    objectFit: 'contain',
+                    filter: 'brightness(0) invert(0.6)',
+                    marginBottom: '-20px'
+                  }}
+                />
+                <span style={{
+                  color: '#8e9ca8',
+                  fontSize: '8px',
+                  fontWeight: '700',
+                  letterSpacing: '2px',
+                  textTransform: 'uppercase'
+                }}>
+                  SUPPORTED
+                </span>
+              </div>
             </div>
 
-            {/* Upload fallback */}
-            <div style={{ position: 'absolute', bottom: '40px', width: '100%', display: 'flex', justifyContent: 'center', zIndex: 20 }}>
-              <label style={{
-                background: 'rgba(255,255,255,0.2)', padding: '12px 24px', backdropFilter: 'blur(4px)',
-                borderRadius: '24px', color: 'white', display: 'flex', gap: '10px', alignItems: 'center',
-                cursor: 'pointer', fontWeight: '500', fontSize: '14px', border: '1px solid rgba(255,255,255,0.3)'
+            {/* Bottom Sheet: Metode QRIS Lainnya */}
+            <div style={{
+              position: 'absolute',
+              bottom: 0,
+              left: 0,
+              width: '100%',
+              backgroundColor: '#ffffff',
+              borderTopLeftRadius: '24px',
+              borderTopRightRadius: '24px',
+              padding: '16px 16px 12px 16px',
+              zIndex: 35,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              boxShadow: '0 -4px 24px rgba(0, 0, 0, 0.4)'
+            }}>
+              <div style={{
+                color: '#003764',
+                fontSize: '15px',
+                fontWeight: '700',
+                marginBottom: '14px',
+                textAlign: 'center',
+                letterSpacing: '-0.1px'
               }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                  <circle cx="8.5" cy="8.5" r="1.5"></circle>
-                  <polyline points="21 15 16 10 5 21"></polyline>
-                </svg>
-                Upload dari Galeri
-                <input type="file" accept="image/*" onChange={handleFileUpload} style={{ display: 'none' }} />
-              </label>
+                Metode QRIS Lainnya
+              </div>
+
+              {/* 3 Action Cards */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, 1fr)',
+                gap: '12px',
+                width: '100%'
+              }}>
+                {/* Bayar */}
+                <button
+                  type="button"
+                  style={{
+                    background: '#ffffff',
+                    border: '1px solid #d4dde5',
+                    borderRadius: '14px',
+                    padding: '12px 4px 10px 4px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <div style={{ height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    {/* Bayar Icon */}
+                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+                      <rect x="2" y="6" width="14" height="14" rx="2" fill="#005ea6" />
+                      <text x="3.5" y="15" fill="#ffffff" fontSize="6.5" fontWeight="900" fontFamily="sans-serif">Rp</text>
+                      <rect x="6" y="3" width="15" height="13" rx="2" stroke="#005ea6" strokeWidth="2" fill="none" />
+                    </svg>
+                  </div>
+                  <span style={{ fontSize: '13px', fontWeight: '600', color: '#444c54' }}>Bayar</span>
+                </button>
+
+                {/* Transfer */}
+                <button
+                  type="button"
+                  style={{
+                    background: '#ffffff',
+                    border: '1px solid #d4dde5',
+                    borderRadius: '14px',
+                    padding: '12px 4px 10px 4px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <div style={{ height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    {/* Transfer Icon */}
+                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+                      <path d="M4 6C4 4.89543 4.89543 4 6 4H18C19.1046 4 20 4.89543 20 6V14C20 18 16.5 20 12 20C7.5 20 4 18 4 14V6Z" fill="#005ea6" />
+                      <text x="6" y="13.5" fill="#ffffff" fontSize="7" fontWeight="bold" fontFamily="sans-serif">Rp</text>
+                    </svg>
+                  </div>
+                  <span style={{ fontSize: '13px', fontWeight: '600', color: '#444c54' }}>Transfer</span>
+                </button>
+
+                {/* Tap */}
+                <button
+                  type="button"
+                  style={{
+                    background: '#ffffff',
+                    border: '1px solid #d4dde5',
+                    borderRadius: '14px',
+                    padding: '12px 4px 10px 4px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <div style={{ height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    {/* Tap / Contactless Icon */}
+                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+                      <rect x="3" y="6" width="13" height="14" rx="2.5" fill="#005ea6" />
+                      <path d="M18 6C19.5 7.5 20.2 9.5 20.2 11.5C20.2 13.5 19.5 15.5 18 17" stroke="#005ea6" strokeWidth="2" strokeLinecap="round" />
+                      <path d="M21 3.5C23.2 5.8 24.2 8.6 24.2 11.5C24.2 14.4 23.2 17.2 21 19.5" stroke="#005ea6" strokeWidth="2" strokeLinecap="round" />
+                    </svg>
+                  </div>
+                  <span style={{ fontSize: '13px', fontWeight: '600', color: '#444c54' }}>Tap</span>
+                </button>
+              </div>
             </div>
 
             <style jsx>{`
-              @keyframes scan {
-                0% { top: 10%; opacity: 0; }
-                10% { opacity: 1; }
-                90% { opacity: 1; }
-                100% { top: 90%; opacity: 0; }
+              @keyframes blueLaserScan {
+                0% {
+                  transform: translateY(460px);
+                  opacity: 0;
+                }
+                12% {
+                  opacity: 1;
+                }
+                85% {
+                  opacity: 1;
+                }
+                100% {
+                  transform: translateY(-180px);
+                  opacity: 0;
+                }
               }
             `}</style>
           </div>
@@ -354,9 +650,11 @@ export default function Home() {
   }
 
   if (!isSubmitted) {
+    const isReadyToContinue = !!amountInput && parseInt(amountInput.replace(/\D/g, ''), 10) > 0;
+
     return (
       <div className={styles.container}>
-        <div className={styles.mobileFrame}>
+        <div className={styles.mobileFrame} style={{ backgroundColor: '#004c97', position: 'relative', overflow: 'hidden' }}>
           {toast && (
             <div className={styles.toastContainer}>
               <div className={`${styles.toast} ${styles[toast.type]}`}>
@@ -371,109 +669,338 @@ export default function Home() {
             </div>
           )}
 
-          <div className={styles.formContainer}>
+          {/* Blue Gradient Header Background with Abstract Waves */}
+          <div style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '180px',
+            background: 'radial-gradient(circle at 80% 20%, #0066b3 0%, #004c97 60%, #003366 100%)',
+            zIndex: 1
+          }}>
+            {/* Soft wave arcs in background */}
+            <svg style={{ position: 'absolute', top: 0, right: 0, width: '100%', height: '100%', opacity: 0.25 }} viewBox="0 0 400 180" fill="none">
+              <circle cx="360" cy="40" r="120" stroke="#ffffff" strokeWidth="35" />
+              <circle cx="390" cy="20" r="170" stroke="#ffffff" strokeWidth="25" />
+            </svg>
+          </div>
 
-            <div className={styles.appHeader}>
-              <button type="button" className={styles.receiptBackBtn} style={{ padding: 0 }}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="15 18 9 12 15 6"></polyline>
-                </svg>
-              </button>
-              <h2 className={styles.appHeaderTitle}>m-Transfer</h2>
-            </div>
+          <div style={{ position: 'relative', zIndex: 2, display: 'flex', flexDirection: 'column', height: '100%' }}>
 
-            <div className={styles.formContent}>
+            {/* Header: Back Chevron + Pembayaran QRIS */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              padding: '10px 16px 18px 16px',
+              gap: '16px',
+              marginTop: '16px'
+            }}>
               <button
                 type="button"
-                className={styles.scanButtonLarge}
                 onClick={startCamera}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#ffffff',
+                  cursor: 'pointer',
+                  padding: '4px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
               >
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                  <line x1="9" y1="9" x2="15" y2="15"></line>
-                  <line x1="15" y1="9" x2="9" y2="15"></line>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="15 19 8 12 15 5"></polyline>
                 </svg>
-                <span>Scan QRIS</span>
               </button>
+              <h1 style={{
+                color: '#ffffff',
+                fontSize: '16px',
+                fontWeight: '500',
+                margin: 0,
+                letterSpacing: '-0.2px'
+              }}>
+                Pembayaran QRIS
+              </h1>
+            </div>
 
-              <form id="qris-form" onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                <div className={styles.inputCard}>
-                  <div className={styles.inputGroup}>
-                    <label className={styles.inputLabel}>Pembayaran ke</label>
-                    <input
-                      type="text"
-                      value={paymentToInput}
-                      onChange={(e) => setPaymentToInput(e.target.value)}
-                      placeholder="Nama Merchant"
-                      className={styles.inputField}
-                      required
-                    />
-                    <div style={{ marginTop: '12px' }}>
-                      <div className={styles.shortcutLabel}>Favorit:</div>
-                      <div className={styles.shortcutContainer}>
-                        <button
-                          type="button"
-                          onClick={() => setPaymentToInput('Ciemilan Payakumbuh')}
-                          className={styles.shortcutBtn}
-                        >
-                          Ciemilan Payakumbuh
-                        </button>
-                      </div>
+            {/* Main Content White Card (Fills bottom of screen) */}
+            <div
+              className="hide-scrollbar"
+              style={{
+                flex: 1,
+                backgroundColor: '#ffffff',
+                borderTopLeftRadius: '24px',
+                borderTopRightRadius: '24px',
+                padding: '24px 20px 20px 20px',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
+                overflowY: 'auto',
+                scrollbarWidth: 'none',
+                msOverflowStyle: 'none'
+              }}
+            >
+              <form id="qris-form" onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '22px' }}>
+                {/* 1. Pembayaran QRIS ke */}
+                <div>
+                  <div style={{ color: '#005ea6', fontSize: '13px', fontWeight: '700', marginBottom: '4px' }}>
+                    Pembayaran QRIS ke
+                  </div>
+                  <div style={{ color: '#2b3036', fontSize: '16px', fontWeight: '600', letterSpacing: '-0.2px' }}>
+                    {paymentToInput || 'FFROKKY, Fashion'}
+                  </div>
+                  <div style={{ color: '#555d65', fontSize: '13px', marginTop: '2px', fontWeight: '500' }}>
+                    {merchantCity || 'PAYAKUMBUH, 26218, ID'}
+                  </div>
+                </div>
+
+                {/* 2. Pengakuisisi */}
+                <div>
+                  <div style={{ color: '#005ea6', fontSize: '13px', fontWeight: '700', marginBottom: '4px' }}>
+                    Pengakuisisi
+                  </div>
+                  <div style={{ color: '#2b3036', fontSize: '16px', fontWeight: '600', letterSpacing: '-0.2px' }}>
+                    {acquirerInput || 'GOPAY'}
+                  </div>
+                  <div style={{ color: '#555d65', fontSize: '13px', marginTop: '2px' }}>
+                    Merchant PAN {merchantPan || '9360091435851418084'}
+                  </div>
+                  <div style={{ color: '#555d65', fontSize: '13px', marginTop: '1px' }}>
+                    No. Referensi {merchantRef || '014662486068'}
+                  </div>
+                </div>
+
+                {/* 3. Sumber Dana Box */}
+                <div>
+                  <div style={{ color: '#005ea6', fontSize: '13px', fontWeight: '700', marginBottom: '6px', marginTop: '-16px' }}>
+                    Sumber Dana
+                  </div>
+                  <div style={{
+                    border: '1.5px solid #00a8e8',
+                    borderRadius: '14px',
+                    padding: '14px 16px',
+                    backgroundColor: '#ffffff'
+                  }}>
+                    <div style={{ color: '#003d79', fontSize: '16px', fontWeight: '600', letterSpacing: '0.3px' }}>
+                      {sourceAccount || '614 - 538 - 4188'}
                     </div>
-                  </div>
-
-                  <div className={styles.inputGroup}>
-                    <label className={styles.inputLabel}>Pengakuisisi</label>
-                    <input
-                      type="text"
-                      value={acquirerInput}
-                      onChange={(e) => setAcquirerInput(e.target.value)}
-                      placeholder="BCA / MANDIRI / etc"
-                      className={styles.inputField}
-                      required
-                    />
-                  </div>
-
-                  <div className={styles.inputGroup}>
-                    <label className={styles.inputLabel}>Nominal (IDR)</label>
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      value={amountInput}
-                      onChange={handleAmountChange}
-                      placeholder="0"
-                      className={styles.inputField}
-                      required
-                    />
-                    <div style={{ marginTop: '12px' }}>
-                      <div className={styles.shortcutLabel}>Cepat:</div>
-                      <div className={styles.shortcutContainer}>
-                        {[10000, 20000, 50000, 100000].map(val => (
-                          <button
-                            key={val}
-                            type="button"
-                            onClick={() => addAmount(val)}
-                            className={styles.shortcutBtn}
-                          >
-                            +{val.toLocaleString('id-ID')}
-                          </button>
-                        ))}
-                      </div>
+                    <div style={{ color: '#555d65', fontSize: '12px', marginTop: '4px', fontWeight: '600' }}>
+                      {sourceAccountType || 'TAHAPAN XPRESI - IDR'}
                     </div>
                   </div>
                 </div>
 
-                <div className={styles.formFooter}>
+                {/* 4. Mata Uang & Nominal Input */}
+                <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: '20px' }}>
+                  <div>
+                    <div style={{ color: '#005ea6', fontSize: '13px', fontWeight: '700', marginBottom: '6px' }}>
+                      Mata Uang
+                    </div>
+                    <div style={{ color: '#2b3036', fontSize: '17px', fontWeight: '700' }}>
+                      IDR
+                    </div>
+                  </div>
+
+                  <div style={{ width: '180px' }}>
+                    <div style={{ color: '#005ea6', fontSize: '13px', fontWeight: '700' }}>
+                      Nominal
+                    </div>
+                    <div
+                      onClick={() => setShowKeyboard(true)}
+                      style={{
+                        position: 'relative',
+                        borderBottom: '2px solid #005ea6',
+                        paddingBottom: '4px',
+                        cursor: 'pointer',
+                        minHeight: '32px',
+                        display: 'flex',
+                        alignItems: 'center'
+                      }}
+                    >
+                      <span style={{
+                        fontSize: '18px',
+                        fontWeight: '400',
+                        color: amountInput ? '#1f1f20ff' : '#9aa5b1'
+                      }}>
+                        {amountInput}
+                      </span>
+                      {showKeyboard && (
+                        <span style={{
+                          display: 'inline-block',
+                          width: '2px',
+                          height: '20px',
+                          backgroundColor: '#005ea6',
+                          marginLeft: '2px',
+                          animation: 'cursorBlink 1s infinite'
+                        }} />
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* 5. Promo Card */}
+                <div>
+                  <div style={{ color: '#005ea6', fontSize: '13px', fontWeight: '700', marginBottom: '6px', marginTop: '24px' }}>
+                    Promo
+                  </div>
+                  <div style={{
+                    border: '1.5px solid #d2dce6',
+                    borderRadius: '14px',
+                    padding: '20px 16px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    cursor: 'pointer'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      {/* Promo Badge Icon */}
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                        <path d="M12 2L14.5 4.5L18 4L18.5 7.5L21.5 9.5L20 12.5L21.5 15.5L18.5 17.5L18 21L14.5 20.5L12 23L9.5 20.5L6 21L5.5 17.5L2.5 15.5L4 12.5L2.5 9.5L5.5 7.5L6 4L9.5 4.5L12 2Z" fill="#b0bac4" />
+                        <text x="8" y="15" fill="#ffffff" fontSize="8" fontWeight="bold">%</text>
+                      </svg>
+                      <span style={{ color: '#9aa5b1', fontSize: '13px', fontWeight: '500' }}>
+                        Gunakan Promo, jadi lebih hemat!
+                      </span>
+                    </div>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#b0bac4" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="9 18 15 12 9 6"></polyline>
+                    </svg>
+                  </div>
+                </div>
+              </form>
+
+              {/* Bottom Action Button (Lanjut) or Numeric Keypad */}
+              {!showKeyboard ? (
+                <div style={{ marginTop: '28px', marginBottom: '6px' }}>
                   <button
                     type="submit"
                     form="qris-form"
-                    className={styles.submitButtonLarge}
+                    disabled={!isReadyToContinue}
+                    style={{
+                      width: '100%',
+                      padding: '14px',
+                      borderRadius: '24px',
+                      border: 'none',
+                      backgroundColor: isReadyToContinue ? '#0066AE' : '#cccccc',
+                      color: '#ffffff',
+                      fontSize: '16px',
+                      fontWeight: '600',
+                      cursor: isReadyToContinue ? 'pointer' : 'not-allowed',
+                      transition: 'all 0.2s ease',
+                      boxShadow: isReadyToContinue ? '0 4px 12px rgba(0, 102, 174, 0.3)' : 'none'
+                    }}
                   >
-                    SEND
+                    Lanjut
                   </button>
                 </div>
-              </form>
+              ) : null}
             </div>
+
+            {/* Virtual Numeric Keyboard (Attached to bottom) */}
+            {showKeyboard && (
+              <div style={{
+                backgroundColor: '#e6ebef',
+                borderTop: '1px solid #d2dbe2',
+                padding: '0 8px 12px 8px',
+                zIndex: 30,
+                display: 'flex',
+                flexDirection: 'column'
+              }}>
+                {/* Keyboard Toolbar with "Selesai" */}
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'flex-end',
+                  alignItems: 'center',
+                  padding: '8px 12px'
+                }}>
+                  <button
+                    type="button"
+                    onClick={() => setShowKeyboard(false)}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: '#005ea6',
+                      fontSize: '16px',
+                      fontWeight: '700',
+                      cursor: 'pointer',
+                      padding: '2px 4px'
+                    }}
+                  >
+                    Selesai
+                  </button>
+                </div>
+
+                {/* Keypad Grid 4 rows x 3 cols */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(3, 1fr)',
+                  gap: '8px',
+                  padding: '0 4px'
+                }}>
+                  {['1', '2', '3', '4', '5', '6', '7', '8', '9', '000', '0'].map((digit) => (
+                    <button
+                      key={digit}
+                      type="button"
+                      onClick={() => handleKeypadPress(digit)}
+                      style={{
+                        backgroundColor: '#ffffff',
+                        border: 'none',
+                        borderRadius: '8px',
+                        height: '46px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '22px',
+                        fontWeight: '700',
+                        color: '#333b42',
+                        boxShadow: '0 1.5px 1px rgba(0, 0, 0, 0.12)',
+                        cursor: 'pointer',
+                        userSelect: 'none'
+                      }}
+                    >
+                      {digit}
+                    </button>
+                  ))}
+
+                  {/* Backspace Key */}
+                  <button
+                    type="button"
+                    onClick={handleKeypadBackspace}
+                    style={{
+                      backgroundColor: '#ffffff',
+                      border: 'none',
+                      borderRadius: '8px',
+                      height: '46px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      boxShadow: '0 1.5px 1px rgba(0, 0, 0, 0.12)',
+                      cursor: 'pointer',
+                      userSelect: 'none'
+                    }}
+                  >
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="#444c54">
+                      {/* Backspace delete shape */}
+                      <path d="M22 3H7c-.69 0-1.23.35-1.59.88L0 12l5.41 8.11c.36.53.9.89 1.59.89h15c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-3 12.59L17.59 17 14 13.41 10.41 17 9 15.59 12.59 12 9 8.41 10.41 7 14 10.59 17.59 7 19 8.41 15.41 12 19 15.59z" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            <style jsx>{`
+              @keyframes cursorBlink {
+                0%, 100% { opacity: 1; }
+                50% { opacity: 0; }
+              }
+              .hide-scrollbar::-webkit-scrollbar {
+                display: none;
+                width: 0px;
+                background: transparent;
+              }
+            `}</style>
           </div>
         </div>
       </div>
