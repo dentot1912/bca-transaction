@@ -6,15 +6,16 @@ import styles from './page.module.css';
 
 export default function Home() {
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isConfirming, setIsConfirming] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
   const [amountInput, setAmountInput] = useState('');
-  const [paymentToInput, setPaymentToInput] = useState('FFROKKYS, Fashion');
+  const [paymentToInput, setPaymentToInput] = useState('FFROKKY, Fashion');
   const [acquirerInput, setAcquirerInput] = useState('GOPAY');
   const [merchantCity, setMerchantCity] = useState('PAYAKUMBUH, 26218, ID');
   const [merchantPan, setMerchantPan] = useState('9360091435851418084');
   const [merchantRef, setMerchantRef] = useState('014662486068');
   const [sourceAccount, setSourceAccount] = useState('614 - 538 - 4188');
-  const [sourceAccountType, setSourceAccountType] = useState('TAHAPAN XPRESI - IDR');
+  const [sourceAccountType, setSourceAccountType] = useState('TAHAPAN XPRESI');
   const [showKeyboard, setShowKeyboard] = useState(true);
 
   const [amount, setAmount] = useState('');
@@ -341,7 +342,10 @@ export default function Home() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!amountInput || !paymentToInput) return;
+    setIsConfirming(true);
+  };
 
+  const handleConfirmPay = () => {
     setAmount(formatAmount(amountInput));
     setPaymentTo(paymentToInput);
     setAcquirer(acquirerInput);
@@ -361,11 +365,13 @@ export default function Home() {
     const randomRrn = Math.floor(Math.random() * 1000000000).toString().padStart(9, '0');
     setRrn(randomRrn);
 
+    setIsConfirming(false);
     setIsSubmitted(true);
   };
 
   const handleSelesai = () => {
     setIsSubmitted(false);
+    setIsConfirming(false);
     setAmountInput('');
     setPaymentToInput('');
   };
@@ -702,6 +708,242 @@ export default function Home() {
                   transform: translateY(-180px);
                   opacity: 0;
                 }
+              }
+            `}</style>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (isConfirming) {
+    const formattedTotal = formatAmount(amountInput);
+
+    return (
+      <div className={styles.container}>
+        <div className={styles.mobileFrame} style={{ backgroundColor: '#004c97', position: 'relative', overflow: 'hidden' }}>
+          {toast && (
+            <div className={styles.toastContainer}>
+              <div className={`${styles.toast} ${styles[toast.type]}`}>
+                {toast.type === 'success' && (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                )}
+                {toast.type === 'error' && (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                )}
+                <span>{toast.message}</span>
+              </div>
+            </div>
+          )}
+
+          {/* Blue Gradient Header Background with Abstract Waves */}
+          <div style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '180px',
+            background: 'radial-gradient(circle at 80% 20%, #0066b3 0%, #004c97 60%, #003366 100%)',
+            zIndex: 1
+          }}>
+            <svg style={{ position: 'absolute', top: 0, right: 0, width: '100%', height: '100%', opacity: 0.25 }} viewBox="0 0 400 180" fill="none">
+              <circle cx="360" cy="40" r="120" stroke="#ffffff" strokeWidth="35" />
+              <circle cx="390" cy="20" r="170" stroke="#ffffff" strokeWidth="25" />
+            </svg>
+          </div>
+
+          <div style={{ position: 'relative', zIndex: 2, display: 'flex', flexDirection: 'column', height: '100%' }}>
+            {/* Header: Back Chevron + Konfirmasi */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              padding: '10px 16px 18px 16px',
+              gap: '16px',
+              marginTop: '16px'
+            }}>
+              <button
+                type="button"
+                onClick={() => setIsConfirming(false)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#ffffff',
+                  cursor: 'pointer',
+                  padding: '4px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="15 19 8 12 15 5"></polyline>
+                </svg>
+              </button>
+              <h1 style={{
+                color: '#ffffff',
+                fontSize: '18px',
+                fontWeight: '600',
+                margin: 0,
+                letterSpacing: '-0.2px'
+              }}>
+                Konfirmasi
+              </h1>
+            </div>
+
+            {/* Main Content White Card */}
+            <div
+              className="hide-scrollbar"
+              style={{
+                flex: 1,
+                backgroundColor: '#ffffff',
+                borderTopLeftRadius: '24px',
+                borderTopRightRadius: '24px',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
+                overflow: 'hidden'
+              }}
+            >
+              {/* Scrollable / Content Body */}
+              <div
+                className="hide-scrollbar"
+                style={{
+                  flex: 1,
+                  overflowY: 'auto',
+                  padding: '24px 20px 16px 20px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  textAlign: 'center',
+                  scrollbarWidth: 'none',
+                  msOverflowStyle: 'none'
+                }}
+              >
+                {/* Notice Text */}
+                <div style={{
+                  color: '#003366',
+                  fontSize: '14.5px',
+                  fontWeight: '700',
+                  lineHeight: '1.45',
+                  maxWidth: '310px',
+                  margin: '0 auto 28px auto'
+                }}>
+                  Apakah data di bawah sudah benar dan Anda akan melanjutkan transaksi?
+                </div>
+
+                {/* Info List */}
+                <div style={{ width: '100%', display: 'flex', flexDirection: 'column' }}>
+                  {/* 1. Jenis Transaksi */}
+                  <div style={{ paddingBottom: '22px' }}>
+                    <div style={{ color: '#8a95a5', fontSize: '13px', fontWeight: '500', marginBottom: '6px' }}>
+                      Jenis Transaksi
+                    </div>
+                    <div style={{ color: '#2b3036', fontSize: '16.5px', fontWeight: '600' }}>
+                      Pembayaran QRIS
+                    </div>
+                  </div>
+
+                  {/* 2. Pembayaran ke */}
+                  <div style={{ borderTop: '1px solid #edf0f3', paddingTop: '20px', paddingBottom: '22px' }}>
+                    <div style={{ color: '#8a95a5', fontSize: '13px', fontWeight: '500', marginBottom: '6px' }}>
+                      Pembayaran ke
+                    </div>
+                    <div style={{ color: '#2b3036', fontSize: '16.5px', fontWeight: '600' }}>
+                      {paymentToInput || 'FFROKKY, Fashion'}
+                    </div>
+                    <div style={{ color: '#4a5568', fontSize: '13.5px', fontWeight: '600', marginTop: '4px' }}>
+                      {merchantCity || 'PAYAKUMBUH, 26218, ID'}
+                    </div>
+                  </div>
+
+                  {/* 3. Pengakuisisi */}
+                  <div style={{ borderTop: '1px solid #edf0f3', paddingTop: '20px', paddingBottom: '22px' }}>
+                    <div style={{ color: '#8a95a5', fontSize: '13px', fontWeight: '500', marginBottom: '6px' }}>
+                      Pengakuisisi
+                    </div>
+                    <div style={{ color: '#2b3036', fontSize: '16.5px', fontWeight: '600' }}>
+                      {acquirerInput || 'GOPAY'}
+                    </div>
+                  </div>
+
+                  {/* 4. Merchant PAN */}
+                  <div style={{ borderTop: '1px solid #edf0f3', paddingTop: '20px', paddingBottom: '22px' }}>
+                    <div style={{ color: '#8a95a5', fontSize: '13px', fontWeight: '500', marginBottom: '6px' }}>
+                      Merchant PAN
+                    </div>
+                    <div style={{ color: '#2b3036', fontSize: '16.5px', fontWeight: '600', letterSpacing: '0.2px' }}>
+                      {merchantPan || '9360091435851418084'}
+                    </div>
+                  </div>
+
+                  {/* 5. Sumber Dana */}
+                  <div style={{ borderTop: '1px solid #edf0f3', paddingTop: '20px', paddingBottom: '22px' }}>
+                    <div style={{ color: '#8a95a5', fontSize: '13px', fontWeight: '500', marginBottom: '6px' }}>
+                      Sumber Dana
+                    </div>
+                    <div style={{ color: '#2b3036', fontSize: '16.5px', fontWeight: '600' }}>
+                      {sourceAccountType || 'TAHAPAN XPRESI'}
+                    </div>
+                    <div style={{ color: '#4a5568', fontSize: '16px', fontWeight: '600', marginTop: '4px', letterSpacing: '0.3px' }}>
+                      {sourceAccount || '614 - 538 - 4188'}
+                    </div>
+                  </div>
+
+                  {/* 6. Total Bayar */}
+                  <div style={{ borderTop: '1px solid #edf0f3', paddingTop: '20px', paddingBottom: '22px' }}>
+                    <div style={{ color: '#8a95a5', fontSize: '13px', fontWeight: '500', marginBottom: '6px' }}>
+                      Total Bayar
+                    </div>
+                    <div style={{ color: '#2b3036', fontSize: '17px', fontWeight: '600' }}>
+                      IDR {formattedTotal}
+                    </div>
+                  </div>
+
+                  {/* 7. No. Referensi */}
+                  <div style={{ borderTop: '1px solid #edf0f3', paddingTop: '20px', paddingBottom: '16px' }}>
+                    <div style={{ color: '#8a95a5', fontSize: '13px', fontWeight: '500', marginBottom: '6px' }}>
+                      No. Referensi
+                    </div>
+                    <div style={{ color: '#2b3036', fontSize: '16.5px', fontWeight: '600' }}>
+                      {merchantRef || '014662486068'}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Bottom Sticky Action Button */}
+              <div style={{
+                padding: '16px 20px 24px 20px',
+                backgroundColor: '#ffffff',
+                boxShadow: '0 -4px 16px rgba(0, 0, 0, 0.04)'
+              }}>
+                <button
+                  type="button"
+                  onClick={handleConfirmPay}
+                  style={{
+                    width: '100%',
+                    padding: '14px',
+                    borderRadius: '24px',
+                    border: 'none',
+                    backgroundColor: '#0066AE',
+                    color: '#ffffff',
+                    fontSize: '16px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    boxShadow: '0 4px 12px rgba(0, 102, 174, 0.3)'
+                  }}
+                >
+                  Lanjut
+                </button>
+              </div>
+            </div>
+
+            <style jsx>{`
+              .hide-scrollbar::-webkit-scrollbar {
+                display: none;
+                width: 0px;
+                background: transparent;
               }
             `}</style>
           </div>
