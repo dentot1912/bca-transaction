@@ -9,7 +9,7 @@ export default function Home() {
   const [isScanning, setIsScanning] = useState(false);
   const [amountInput, setAmountInput] = useState('');
   const [paymentToInput, setPaymentToInput] = useState('FFROKKYS, Fashion');
-  const [acquirerInput, setAcquirerInput] = useState('BCA');
+  const [acquirerInput, setAcquirerInput] = useState('GOPAY');
   const [merchantCity, setMerchantCity] = useState('PAYAKUMBUH, 26218, ID');
   const [merchantPan, setMerchantPan] = useState('9360091435851418084');
   const [merchantRef, setMerchantRef] = useState('014662486068');
@@ -734,9 +734,10 @@ export default function Home() {
                 borderTopLeftRadius: '24px',
                 borderTopRightRadius: '24px',
                 padding: '24px 20px 20px 20px',
+                paddingBottom: showKeyboard ? '280px' : '24px',
                 display: 'flex',
                 flexDirection: 'column',
-                justifyContent: 'space-between',
+                justifyContent: 'flex-start',
                 overflowY: 'auto',
                 scrollbarWidth: 'none',
                 msOverflowStyle: 'none'
@@ -871,8 +872,8 @@ export default function Home() {
                 </div>
               </form>
 
-              {/* Bottom Action Button (Lanjut) or Numeric Keypad */}
-              {!showKeyboard ? (
+              {/* Bottom Action Button (Lanjut) when keyboard is closed */}
+              {!showKeyboard && (
                 <div style={{ marginTop: '28px', marginBottom: '6px' }}>
                   <button
                     type="submit"
@@ -895,16 +896,21 @@ export default function Home() {
                     Lanjut
                   </button>
                 </div>
-              ) : null}
+              )}
             </div>
 
-            {/* Virtual Numeric Keyboard (Attached to bottom) */}
+            {/* Virtual Numeric Keyboard (Fixed at bottom) */}
             {showKeyboard && (
               <div style={{
+                position: 'absolute',
+                bottom: 0,
+                left: 0,
+                width: '100%',
                 backgroundColor: '#e6ebef',
                 borderTop: '1px solid #d2dbe2',
-                padding: '0 8px 12px 8px',
-                zIndex: 30,
+                padding: '0 8px 14px 8px',
+                zIndex: 40,
+                boxShadow: '0 -2px 10px rgba(0,0,0,0.06)',
                 display: 'flex',
                 flexDirection: 'column'
               }}>
@@ -913,7 +919,7 @@ export default function Home() {
                   display: 'flex',
                   justifyContent: 'flex-end',
                   alignItems: 'center',
-                  padding: '8px 12px'
+                  padding: '6px 12px'
                 }}>
                   <button
                     type="button"
