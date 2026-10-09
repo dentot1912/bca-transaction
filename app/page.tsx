@@ -56,9 +56,13 @@ export default function Home() {
     }
   };
 
+  const [isFlashOn, setIsFlashOn] = useState(false);
+  const [hasTorch, setHasTorch] = useState(false);
+
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const scanningRef = useRef(false);
+  const videoTrackRef = useRef<MediaStreamTrack | null>(null);
 
   const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
     setToast({ message, type });
@@ -94,11 +98,56 @@ export default function Home() {
     return tags;
   };
 
+  const toggleFlash = async () => {
+    if (!videoTrackRef.current) {
+      showToast("Kamera belum aktif", 'info');
+      return;
+    }
+
+    try {
+      const track = videoTrackRef.current;
+      const capabilities = (track.getCapabilities ? track.getCapabilities() : {}) as any;
+
+      if (!capabilities.torch && !('torch' in capabilities)) {
+        // Many browsers on desktop don't have torch capability
+        showToast("Flashlight tidak didukung pada perangkat ini", 'info');
+        return;
+      }
+
+      const nextState = !isFlashOn;
+      await (track as any).applyConstraints({
+        advanced: [{ torch: nextState }]
+      });
+      setIsFlashOn(nextState);
+      showToast(nextState ? "Flashlight dinyalakan" : "Flashlight dimatikan", 'success');
+    } catch (err) {
+      console.error("Error toggling flash:", err);
+      showToast("Gagal mengubah status flashlight", 'error');
+    }
+  };
+
   const startCamera = async () => {
     setIsScanning(true);
+    setIsFlashOn(false);
     scanningRef.current = true;
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: "environment"
+        }
+      });
+
+      const videoTrack = stream.getVideoTracks()[0];
+      if (videoTrack) {
+        videoTrackRef.current = videoTrack;
+        const capabilities = (videoTrack.getCapabilities ? videoTrack.getCapabilities() : {}) as any;
+        if (capabilities.torch || 'torch' in capabilities) {
+          setHasTorch(true);
+        } else {
+          setHasTorch(false);
+        }
+      }
+
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         videoRef.current.setAttribute("playsinline", "true");
@@ -115,9 +164,15 @@ export default function Home() {
 
   const stopCamera = () => {
     scanningRef.current = false;
+    setIsFlashOn(false);
+    if (videoTrackRef.current) {
+      videoTrackRef.current.stop();
+      videoTrackRef.current = null;
+    }
     if (videoRef.current && videoRef.current.srcObject) {
       const stream = videoRef.current.srcObject as MediaStream;
       stream.getTracks().forEach(track => track.stop());
+      videoRef.current.srcObject = null;
     }
     setIsScanning(false);
   };
@@ -469,50 +524,64 @@ export default function Home() {
                   <input type="file" accept="image/*" onChange={handleFileUpload} style={{ display: 'none' }} />
                 </label>
 
-                {/* Flashlight Disabled / Crossed Star Icon */}
+                {/* Flashlight Toggle Button */}
                 <button
                   type="button"
                   style={{
-                    background: 'none',
+                    background: isFlashOn ? 'rgba(255, 255, 255, 0.25)' : 'none',
                     border: 'none',
+                    borderRadius: '50%',
                     color: '#ffffff',
                     cursor: 'pointer',
                     padding: 0,
-                    width: '24px',
-                    height: '24px',
+                    width: '28px',
+                    height: '28px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    flexShrink: 0
+                    flexShrink: 0,
+                    transition: 'all 0.2s ease'
                   }}
-                  onClick={() => showToast('Flashlight tidak tersedia', 'info')}
+                  onClick={toggleFlash}
+                  title={isFlashOn ? "Matikan Flash" : "Nyalakan Flash"}
                 >
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                    {/* Lightning bolt shape */}
-                    <path
-                      d="M13 2L4 13H11L10 22L20 10H13L13 2Z"
-                      fill="#ffffff"
-                    />
-                    {/* Diagonal slash line across the flash */}
-                    <line
-                      x1="4"
-                      y1="4"
-                      x2="20"
-                      y2="20"
-                      stroke="#020b14"
-                      strokeWidth="3.2"
-                      strokeLinecap="round"
-                    />
-                    <line
-                      x1="4"
-                      y1="4"
-                      x2="20"
-                      y2="20"
-                      stroke="#ffffff"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                    />
-                  </svg>
+                  {isFlashOn ? (
+                    /* Active Torch (Lit up flash icon) */
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                      <path
+                        d="M13 2L4 13H11L10 22L20 10H13L13 2Z"
+                        fill="#ffd700"
+                        stroke="#ffffff"
+                        strokeWidth="1.2"
+                      />
+                    </svg>
+                  ) : (
+                    /* Inactive / Crossed Torch icon */
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                      <path
+                        d="M13 2L4 13H11L10 22L20 10H13L13 2Z"
+                        fill="#ffffff"
+                      />
+                      <line
+                        x1="4"
+                        y1="4"
+                        x2="20"
+                        y2="20"
+                        stroke="#020b14"
+                        strokeWidth="3.2"
+                        strokeLinecap="round"
+                      />
+                      <line
+                        x1="4"
+                        y1="4"
+                        x2="20"
+                        y2="20"
+                        stroke="#ffffff"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                  )}
                 </button>
               </div>
             </div>
