@@ -119,7 +119,6 @@ export default function Home() {
         advanced: [{ torch: nextState }]
       });
       setIsFlashOn(nextState);
-      showToast(nextState ? "Flashlight dinyalakan" : "Flashlight dimatikan", 'success');
     } catch (err) {
       console.error("Error toggling flash:", err);
       showToast("Gagal mengubah status flashlight", 'error');
