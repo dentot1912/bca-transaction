@@ -23,6 +23,9 @@ export default function Home() {
   const [acquirer, setAcquirer] = useState('BCA');
   const [timestamp, setTimestamp] = useState('');
   const [rrn, setRrn] = useState('');
+  const [terminalId, setTerminalId] = useState('');
+  const [customerPan, setCustomerPan] = useState('');
+  const [showDetail, setShowDetail] = useState(false);
   const [toast, setToast] = useState<{ message: string, type: 'success' | 'error' | 'info' } | null>(null);
 
   const handleKeypadPress = (val: string) => {
@@ -419,6 +422,16 @@ export default function Home() {
     const randomRrn = Math.floor(Math.random() * 1000000000).toString().padStart(9, '0');
     setRrn(randomRrn);
 
+    const randomTerminal = 'ID' + Math.floor(100000 + Math.random() * 900000);
+    setTerminalId(randomTerminal);
+
+    // Format customer pan masked: 9360 0110 **** 8472
+    const cleanAcc = sourceAccount.replace(/\D/g, '');
+    const last4 = cleanAcc.length >= 4 ? cleanAcc.slice(-4) : '4188';
+    setCustomerPan(`9360 0110 **** ${last4}`);
+
+    setShowDetail(false);
+
     setIsConfirming(false);
     setIsSubmitted(true);
   };
@@ -426,6 +439,7 @@ export default function Home() {
   const handleSelesai = () => {
     setIsSubmitted(false);
     setIsConfirming(false);
+    setShowDetail(false);
     setAmountInput('');
     setPaymentToInput('');
   };
@@ -1460,11 +1474,65 @@ export default function Home() {
                   {rrn}
                 </div>
               </div>
+
+              {showDetail && (
+                <>
+                  <div className={`${styles.detailRow} ${styles.borderedBottom}`}>
+                    <div className={styles.detailLabel}>Jenis Transaksi</div>
+                    <div className={styles.detailValue}>Pembayaran QRIS</div>
+                  </div>
+
+                  <div className={`${styles.detailRow} ${styles.borderedBottom}`}>
+                    <div className={styles.detailLabel}>Lokasi Merchant</div>
+                    <div className={styles.detailValue}>{merchantCity || 'PAYAKUMBUH, 26218, ID'}</div>
+                  </div>
+
+                  <div className={`${styles.detailRow} ${styles.borderedBottom}`}>
+                    <div className={styles.detailLabel}>Merchant PAN</div>
+                    <div className={styles.detailValue}>{merchantPan || '9360091435851418084'}</div>
+                  </div>
+
+                  <div className={`${styles.detailRow} ${styles.borderedBottom}`}>
+                    <div className={styles.detailLabel}>Terminal ID</div>
+                    <div className={styles.detailValue}>{terminalId || 'ID102938'}</div>
+                  </div>
+
+                  <div className={`${styles.detailRow} ${styles.borderedBottom}`}>
+                    <div className={styles.detailLabel}>Sumber Dana</div>
+                    <div className={styles.detailValue}>
+                      <div>{sourceAccountType || 'TAHAPAN XPRESI'}</div>
+                      <div style={{ color: '#666', fontSize: '13px', marginTop: '2px' }}>{sourceAccount || '614 - 538 - 4188'}</div>
+                    </div>
+                  </div>
+
+                  <div className={`${styles.detailRow} ${styles.borderedBottom}`}>
+                    <div className={styles.detailLabel}>Customer PAN</div>
+                    <div className={styles.detailValue}>{customerPan || '9360 0110 **** 4188'}</div>
+                  </div>
+
+                  <div className={`${styles.detailRow} ${styles.borderedBottom}`}>
+                    <div className={styles.detailLabel}>Total Bayar</div>
+                    <div className={styles.detailValue} style={{ fontWeight: '600', color: '#003d79' }}>
+                      IDR {amount}
+                    </div>
+                  </div>
+
+                  <div className={`${styles.detailRow} ${styles.borderedBottom}`}>
+                    <div className={styles.detailLabel}>No Referensi</div>
+                    <div className={styles.detailValue}>{merchantRef || '014662486068'}</div>
+                  </div>
+                </>
+              )}
             </div>
           </div>
 
-          <div className={styles.lihatDetail}>
-            Lihat Detail <span className={styles.chevronDown}></span>
+          <div
+            className={styles.lihatDetail}
+            onClick={() => setShowDetail(!showDetail)}
+            role="button"
+            tabIndex={0}
+          >
+            {showDetail ? 'Sembunyikan' : 'Lihat Detail'} <span className={showDetail ? styles.chevronUp : styles.chevronDown}></span>
           </div>
         </div>
 
