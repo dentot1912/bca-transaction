@@ -4,7 +4,51 @@ import { useState, useRef, useEffect } from 'react';
 import jsQR from 'jsqr';
 import styles from './page.module.css';
 
+interface TransactionItem {
+  id: string;
+  day: string;
+  month: string;
+  year: string;
+  monthHeader: string;
+  name: string;
+  amount: string;
+  type: string;
+  status: 'Berhasil' | 'Gagal';
+  acquirer: string;
+  rrn: string;
+  terminalId: string;
+  customerPan: string;
+  timestamp: string;
+  merchantCity?: string;
+  merchantPan?: string;
+  merchantRef?: string;
+}
+
+const DEFAULT_TRANSACTIONS: TransactionItem[] = [
+  {
+    id: 'default-1',
+    day: '22',
+    month: 'Nov',
+    year: '2026',
+    monthHeader: 'November',
+    name: 'FFROKKY, Fashion',
+    amount: 'IDR 2,000.00',
+    type: 'Pembayaran QRIS',
+    status: 'Gagal',
+    acquirer: 'GOPAY',
+    rrn: '014662486068',
+    terminalId: 'ID102938',
+    customerPan: '9360 0110 **** 4188',
+    timestamp: '22 Nov 2026 16:12:00',
+    merchantCity: 'PAYAKUMBUH, 26218, ID',
+    merchantPan: '9360091435851418084',
+    merchantRef: '014662486068'
+  }
+];
+
 export default function Home() {
+  const [isAktivitas, setIsAktivitas] = useState(true);
+  const [transactions, setTransactions] = useState<TransactionItem[]>(DEFAULT_TRANSACTIONS);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isConfirming, setIsConfirming] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
@@ -70,6 +114,31 @@ export default function Home() {
   const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3000);
+  };
+
+  // Muat data transaksi dari localStorage saat pertama kali aplikasi dibuka
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('bca_transactions');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setTransactions(parsed);
+        }
+      }
+    } catch (e) {
+      console.error('Error loading transactions from localStorage:', e);
+    }
+  }, []);
+
+  // Simpan data transaksi ke localStorage setiap kali ada pembaruan transaksi
+  const updateTransactions = (newTxList: TransactionItem[]) => {
+    setTransactions(newTxList);
+    try {
+      localStorage.setItem('bca_transactions', JSON.stringify(newTxList));
+    } catch (e) {
+      console.error('Error saving transactions to localStorage:', e);
+    }
   };
 
   useEffect(() => {
@@ -403,21 +472,25 @@ export default function Home() {
   };
 
   const handleConfirmPay = () => {
-    setAmount(formatAmount(amountInput));
+    const formattedAmount = formatAmount(amountInput);
+    setAmount(formattedAmount);
     setPaymentTo(paymentToInput);
     setAcquirer(acquirerInput);
 
     // Format date like: "28 Mar 2026 07:54:54"
     const now = new Date();
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const fullMonths = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
     const day = now.getDate().toString().padStart(2, '0');
     const month = months[now.getMonth()];
-    const year = now.getFullYear();
+    const fullMonth = fullMonths[now.getMonth()];
+    const year = now.getFullYear().toString();
     const hours = now.getHours().toString().padStart(2, '0');
     const minutes = now.getMinutes().toString().padStart(2, '0');
     const seconds = now.getSeconds().toString().padStart(2, '0');
 
-    setTimestamp(`${day} ${month} ${year} ${hours}:${minutes}:${seconds}`);
+    const formattedTimestamp = `${day} ${month} ${year} ${hours}:${minutes}:${seconds}`;
+    setTimestamp(formattedTimestamp);
 
     const randomRrn = Math.floor(Math.random() * 1000000000).toString().padStart(9, '0');
     setRrn(randomRrn);
@@ -428,7 +501,30 @@ export default function Home() {
     // Format customer pan masked: 9360 0110 **** 8472
     const cleanAcc = sourceAccount.replace(/\D/g, '');
     const last4 = cleanAcc.length >= 4 ? cleanAcc.slice(-4) : '4188';
-    setCustomerPan(`9360 0110 **** ${last4}`);
+    const formattedCustomerPan = `9360 0110 **** ${last4}`;
+    setCustomerPan(formattedCustomerPan);
+
+    // Catat transaksi baru ke daftar aktivitas dan simpan di localStorage
+    const newTx: TransactionItem = {
+      id: 'tx-' + Date.now(),
+      day,
+      month,
+      year,
+      monthHeader: fullMonth,
+      name: paymentToInput || 'FFROKKY, Fashion',
+      amount: `IDR ${formattedAmount}`,
+      type: 'Pembayaran QRIS',
+      status: 'Berhasil',
+      acquirer: acquirerInput || 'BCA',
+      rrn: randomRrn,
+      terminalId: randomTerminal,
+      customerPan: formattedCustomerPan,
+      timestamp: formattedTimestamp,
+      merchantCity: merchantCity || 'PAYAKUMBUH, 26218, ID',
+      merchantPan: merchantPan || '9360091435851418084',
+      merchantRef: merchantRef || '014662486068'
+    };
+    updateTransactions([newTx, ...transactions]);
 
     setShowDetail(false);
 
@@ -442,7 +538,178 @@ export default function Home() {
     setShowDetail(false);
     setAmountInput('');
     setPaymentToInput('');
+    setIsAktivitas(true);
   };
+
+  if (isAktivitas) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.mobileFrame}>
+          <div className={styles.aktivitasContainer}>
+            {/* Blue Header with abstract curves */}
+            <div className={styles.aktivitasHeader}>
+              <svg className={styles.aktivitasHeaderBgCurve} viewBox="0 0 380 150" fill="none" preserveAspectRatio="none">
+                <circle cx="340" cy="-20" r="140" stroke="#1c75c8" strokeWidth="28" opacity="0.6" />
+                <circle cx="380" cy="-50" r="220" stroke="#1c75c8" strokeWidth="24" opacity="0.4" />
+                <circle cx="410" cy="-70" r="290" stroke="#1c75c8" strokeWidth="18" opacity="0.3" />
+                <path d="M120 -40 C180 30, 240 70, 380 90" stroke="#1a72c4" strokeWidth="16" opacity="0.35" fill="none" />
+              </svg>
+
+              {/* Title Row */}
+              <div className={styles.aktivitasTitleRow}>
+                <h1 className={styles.aktivitasTitle}>Aktivitas</h1>
+                <button className={styles.aktivitasFilterBtn} aria-label="Filter">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Tabs */}
+              <div className={styles.aktivitasTabs}>
+                <div className={`${styles.aktivitasTab} ${styles.aktivitasTabActive}`}>
+                  Transaksi
+                </div>
+                <div className={styles.aktivitasTab}>
+                  Lainnya
+                </div>
+              </div>
+            </div>
+
+            {/* Body / List */}
+            <div className={styles.aktivitasBody}>
+              {/* Group transactions by month */}
+              {Array.from(new Set(transactions.map(t => t.monthHeader))).map(monthGroup => (
+                <div key={monthGroup}>
+                  {/* Month label */}
+                  <div className={styles.aktivitasMonthLabel}>{monthGroup}</div>
+
+                  {/* Transaction Items */}
+                  {transactions
+                    .filter(t => t.monthHeader === monthGroup)
+                    .map(tx => (
+                      <div
+                        key={tx.id}
+                        className={styles.aktivitasTxItem}
+                        onClick={() => {
+                          setAmount(tx.amount.replace('IDR ', ''));
+                          setPaymentTo(tx.name);
+                          setAcquirer(tx.acquirer);
+                          setTimestamp(tx.timestamp);
+                          setRrn(tx.rrn);
+                          setTerminalId(tx.terminalId);
+                          setCustomerPan(tx.customerPan);
+                          if (tx.merchantCity) setMerchantCity(tx.merchantCity);
+                          if (tx.merchantPan) setMerchantPan(tx.merchantPan);
+                          if (tx.merchantRef) setMerchantRef(tx.merchantRef);
+                          setIsAktivitas(false);
+                          setIsSubmitted(true);
+                          setIsConfirming(false);
+                        }}
+                      >
+                        <div className={styles.aktivitasTxDate}>
+                          <span className={styles.aktivitasTxDay}>{tx.day}</span>
+                          <span className={styles.aktivitasTxMonth}>{tx.month}</span>
+                          <span className={styles.aktivitasTxYear}>{tx.year}</span>
+                        </div>
+                        <div className={styles.aktivitasTxInfo}>
+                          <div className={styles.aktivitasTxName}>{tx.name}</div>
+                          <div className={styles.aktivitasTxAmount}>{tx.amount}</div>
+                          <div className={styles.aktivitasTxType}>{tx.type}</div>
+                          <span className={tx.status === 'Berhasil' ? styles.aktivitasBadgeBerhasil : styles.aktivitasBadgeGagal}>
+                            {tx.status}
+                          </span>
+                        </div>
+                        <div className={styles.aktivitasTxArrow}>
+                          <svg width="8" height="14" viewBox="0 0 8 14" fill="none" stroke="#005ea6" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="1.5 1.5 6.5 7 1.5 12.5" />
+                          </svg>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              ))}
+            </div>
+
+            {/* Bottom Nav */}
+            <div className={styles.aktivitasBottomNav}>
+              {/* 1. Beranda */}
+              <button className={styles.aktivitasNavItem}>
+                <svg width="24" height="24" viewBox="0 0 26 26" fill="none" stroke="#7eb5e8" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  {/* Bank temple / House shape */}
+                  <path d="M3 10.5L13 2.5L23 10.5" />
+                  <path d="M5 10.5V20.5C5 21.6 5.9 22.5 7 22.5H19C20.1 22.5 21 21.6 21 20.5V10.5" />
+                  {/* Inner columns */}
+                  <line x1="9" y1="13" x2="9" y2="18.5" strokeWidth="1.7" />
+                  <line x1="13" y1="13" x2="13" y2="18.5" strokeWidth="1.7" />
+                  <line x1="17" y1="13" x2="17" y2="18.5" strokeWidth="1.7" />
+                  <line x1="7" y1="19" x2="19" y2="19" strokeWidth="1.7" />
+                </svg>
+                <span className={styles.aktivitasNavLabel}>Beranda</span>
+              </button>
+
+              {/* 2. Aktivitas (Active) */}
+              <button className={styles.aktivitasNavItem}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                  {/* Bill/document with 'Rp' icon */}
+                  <rect x="4" y="2.5" width="16" height="19" rx="2.5" fill="#ffffff" />
+                  <text x="12" y="11.5" textAnchor="middle" fill="#005da6" fontSize="7.5" fontWeight="900" fontFamily="sans-serif">Rp</text>
+                  <line x1="7" y1="15" x2="17" y2="15" stroke="#005da6" strokeWidth="1.5" strokeLinecap="round" />
+                  <circle cx="16" cy="19" r="4.5" fill="#005da6" />
+                  <path d="M14.5 19H17.5M16 17.5V20.5" stroke="#ffffff" strokeWidth="1.2" strokeLinecap="round" />
+                </svg>
+                <span className={`${styles.aktivitasNavLabel} ${styles.aktivitasNavLabelActive}`}>Aktivitas</span>
+              </button>
+
+              {/* 3. QRIS Floating Center */}
+              <div className={styles.aktivitasNavQrisWrapper}>
+                <button
+                  className={styles.aktivitasNavQris}
+                  onClick={() => setIsAktivitas(false)}
+                  title="Buka QRIS"
+                >
+                  <div className={styles.aktivitasNavQrisBadge}>
+                    {/* Center QRIS nested square icon */}
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                      <rect x="2.5" y="2.5" width="19" height="19" rx="2" stroke="#ffffff" strokeWidth="2.4" />
+                      <rect x="7" y="7" width="10" height="10" rx="1" stroke="#ffffff" strokeWidth="2" />
+                      <rect x="10" y="10" width="4" height="4" fill="#ffffff" />
+                    </svg>
+                  </div>
+                  {/* Stylized QRIS text logo */}
+                  <div className={styles.aktivitasNavQrisLogo}>
+                    <svg width="46" height="18" viewBox="0 0 60 22" fill="none">
+                      {/* Stylized QRIS letters */}
+                      <text x="31" y="14.5" textAnchor="middle" fill="#ffffff" fontSize="13" fontWeight="900" fontStyle="italic" letterSpacing="0.8">QRIS</text>
+                    </svg>
+                  </div>
+                </button>
+              </div>
+
+              {/* 4. Untukmu */}
+              <button className={styles.aktivitasNavItem}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#7eb5e8" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="9.5" />
+                  <polygon points="12 6.5 13.6 10.2 17.5 10.5 14.5 13.1 15.4 17 12 14.9 8.6 17 9.5 13.1 6.5 10.5 10.4 10.2 12 6.5" fill="#7eb5e8" stroke="#7eb5e8" strokeWidth="0.8" />
+                </svg>
+                <span className={styles.aktivitasNavLabel}>Untukmu</span>
+              </button>
+
+              {/* 5. Akun Saya */}
+              <button className={styles.aktivitasNavItem}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#7eb5e8" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M19 20.5C19 17.5 16 15.5 12 15.5C8 15.5 5 17.5 5 20.5" />
+                  <circle cx="12" cy="8" r="4.5" />
+                </svg>
+                <span className={styles.aktivitasNavLabel}>Akun Saya</span>
+              </button>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (isScanning) {
     return (

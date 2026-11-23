@@ -576,3 +576,346 @@
     transform: translateY(0);
   }
 }
+
+/* ============================================
+   AKTIVITAS PAGE STYLES (Pixel Perfect BCA Mobile / myBCA)
+   ============================================ */
+
+.aktivitasContainer {
+  background-color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+.aktivitasHeader {
+  background: #005ea6;
+  background-image: 
+    radial-gradient(circle at 95% -10%, #1579cc 0%, transparent 55%),
+    radial-gradient(circle at 5% 110%, #004680 0%, transparent 60%);
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+  padding-bottom: 0;
+}
+
+.aktivitasHeaderBgCurve {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  opacity: 0.45;
+}
+
+.aktivitasStatusBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 18px 4px 20px;
+  position: relative;
+  z-index: 2;
+}
+
+.aktivitasTime {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #ffffff;
+  letter-spacing: -0.2px;
+}
+
+.aktivitasStatusIcons {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #ffffff;
+}
+
+.aktivitasTitleRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 42px 18px 20px 20px;
+  position: relative;
+  z-index: 2;
+}
+
+.aktivitasTitle {
+  color: #ffffff;
+  opacity: 0.95;
+  font-size: 20px;
+  font-weight: 500;
+  margin: 0;
+  letter-spacing: -0.2px;
+}
+
+.aktivitasFilterBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+}
+
+.aktivitasTabs {
+  display: flex;
+  background: #ffffff;
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
+  margin: 0;
+  position: relative;
+  z-index: 2;
+}
+
+.aktivitasTab {
+  flex: 1;
+  text-align: center;
+  padding: 14px 0 12px 0;
+  font-size: 14.5px;
+  font-weight: 600;
+  color: #72849a;
+  cursor: pointer;
+  position: relative;
+  user-select: none;
+}
+
+.aktivitasTabActive {
+  color: #005ea6;
+  font-weight: 700;
+}
+
+.aktivitasTabActive::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2.5px;
+  background: #005ea6;
+  border-radius: 2px 2px 0 0;
+}
+
+.aktivitasBody {
+  flex: 1;
+  background: #ffffff;
+  overflow-y: auto;
+  scrollbar-width: none;
+  display: flex;
+  flex-direction: column;
+}
+
+.aktivitasBody::-webkit-scrollbar {
+  display: none;
+}
+
+.aktivitasMonthLabel {
+  padding: 10px 20px 9px 20px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #03254c;
+  background: #f4f6fa;
+  letter-spacing: -0.1px;
+}
+
+.aktivitasTxItem {
+  display: flex;
+  align-items: center;
+  padding: 18px 20px;
+  background: #ffffff;
+  border-bottom: 1px solid #edf0f4;
+  gap: 16px;
+  cursor: pointer;
+}
+
+.aktivitasTxDate {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 44px;
+  text-align: center;
+}
+
+.aktivitasTxDay {
+  font-size: 24px;
+  font-weight: 700;
+  color: #718298;
+  line-height: 1;
+  letter-spacing: -0.5px;
+}
+
+.aktivitasTxMonth {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #718298;
+  line-height: 1.3;
+  margin-top: 2px;
+}
+
+.aktivitasTxYear {
+  font-size: 12px;
+  font-weight: 500;
+  color: #8c9ba5;
+  line-height: 1.2;
+}
+
+.aktivitasTxInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.aktivitasTxName {
+  font-size: 15px;
+  font-weight: 700;
+  color: #002d5b;
+  margin-bottom: 4px;
+  letter-spacing: -0.2px;
+}
+
+.aktivitasTxAmount {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: #d8232a;
+  margin-bottom: 3px;
+  letter-spacing: -0.1px;
+}
+
+.aktivitasTxType {
+  font-size: 13px;
+  color: #8898aa;
+  font-weight: 400;
+  margin-bottom: 6px;
+}
+
+.aktivitasBadgeGagal {
+  display: inline-block;
+  background: #fee7e7;
+  color: #e03137;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 3px 14px;
+  border-radius: 12px;
+}
+
+.aktivitasBadgeBerhasil {
+  display: inline-block;
+  background: #e8f8f0;
+  color: #108548;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 3px 14px;
+  border-radius: 12px;
+}
+
+.aktivitasTxArrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #005ea6;
+  padding-left: 4px;
+}
+
+.aktivitasBottomNav {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  background: #0060af;
+  height: 64px;
+  border-top-left-radius: 32px;
+  border-top-right-radius: 32px;
+  padding: 0 4px 6px 4px;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 10;
+}
+
+.aktivitasNavItem {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 0;
+  gap: 3px;
+  height: 100%;
+}
+
+.aktivitasNavLabel {
+  font-size: 10px;
+  color: #8ec3f2;
+  font-weight: 500;
+  letter-spacing: -0.1px;
+}
+
+.aktivitasNavLabelActive {
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.aktivitasNavQrisWrapper {
+  flex: 1.1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  height: 100%;
+}
+
+.aktivitasNavQris {
+  position: absolute;
+  top: -24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.aktivitasNavQrisBadge {
+  width: 58px;
+  height: 58px;
+  border-radius: 20px;
+  background: #00a4e4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 164, 228, 0.4);
+  border: 4px solid #0060af;
+  position: relative;
+  transform: rotate(0deg);
+}
+
+.aktivitasNavQrisLogo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  margin-top: 2px;
+}
+
+.aktivitasHomeIndicator {
+  width: 130px;
+  height: 4px;
+  background: #ffffff;
+  border-radius: 4px;
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  opacity: 0.9;
+}
