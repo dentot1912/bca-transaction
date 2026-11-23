@@ -665,7 +665,7 @@ export default function Home() {
               <div className={styles.aktivitasNavQrisWrapper}>
                 <button
                   className={styles.aktivitasNavQris}
-                  onClick={() => setIsAktivitas(false)}
+                  onClick={() => { startCamera(); setIsAktivitas(false); }}
                   title="Buka QRIS"
                 >
                   <div className={styles.aktivitasNavQrisBadge}>
@@ -1350,7 +1350,7 @@ export default function Home() {
             }}>
               <button
                 type="button"
-                onClick={startCamera}
+                onClick={() => setIsAktivitas(true)}
                 style={{
                   background: 'none',
                   border: 'none',
