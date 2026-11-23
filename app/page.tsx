@@ -285,7 +285,7 @@ export default function Home() {
       const tag = i.toString().padStart(2, '0');
       if (tags[tag]) {
         const subTags = parseEMVQR(tags[tag]);
-        
+
         if (subTags['01']) {
           foundPan = subTags['01'];
           setMerchantPan(foundPan);
