@@ -69,8 +69,47 @@ export default function Home() {
   const [rrn, setRrn] = useState('');
   const [terminalId, setTerminalId] = useState('');
   const [customerPan, setCustomerPan] = useState('');
+  const [txStatus, setTxStatus] = useState<'Berhasil' | 'Gagal'>('Berhasil');
   const [showDetail, setShowDetail] = useState(false);
   const [toast, setToast] = useState<{ message: string, type: 'success' | 'error' | 'info' } | null>(null);
+
+  const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const isLongPressRef = useRef<boolean>(false);
+
+  const toggleTransactionStatus = (id: string, e?: React.MouseEvent | React.TouchEvent) => {
+    if (e) {
+      e.stopPropagation();
+    }
+    const updated = transactions.map(t => {
+      if (t.id === id) {
+        const nextStatus = t.status === 'Berhasil' ? 'Gagal' : 'Berhasil';
+        return {
+          ...t,
+          status: nextStatus as 'Berhasil' | 'Gagal'
+        };
+      }
+      return t;
+    });
+    updateTransactions(updated);
+  };
+
+  const handleTouchStart = (id: string) => {
+    isLongPressRef.current = false;
+    longPressTimerRef.current = setTimeout(() => {
+      isLongPressRef.current = true;
+      if (typeof window !== 'undefined' && window.navigator && window.navigator.vibrate) {
+        window.navigator.vibrate(50);
+      }
+      toggleTransactionStatus(id);
+    }, 600);
+  };
+
+  const handleTouchEnd = () => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+  };
 
   const handleKeypadPress = (val: string) => {
     const currentClean = amountInput.replace(/\D/g, '');
@@ -526,6 +565,7 @@ export default function Home() {
     };
     updateTransactions([newTx, ...transactions]);
 
+    setTxStatus('Berhasil');
     setShowDetail(false);
 
     setIsConfirming(false);
@@ -591,7 +631,21 @@ export default function Home() {
                       <div
                         key={tx.id}
                         className={styles.aktivitasTxItem}
+                        onMouseDown={() => handleTouchStart(tx.id)}
+                        onMouseUp={handleTouchEnd}
+                        onMouseLeave={handleTouchEnd}
+                        onTouchStart={() => handleTouchStart(tx.id)}
+                        onTouchEnd={handleTouchEnd}
+                        onTouchCancel={handleTouchEnd}
+                        onContextMenu={(e) => {
+                          e.preventDefault();
+                          toggleTransactionStatus(tx.id, e);
+                        }}
                         onClick={() => {
+                          if (isLongPressRef.current) {
+                            isLongPressRef.current = false;
+                            return;
+                          }
                           setAmount(tx.amount.replace('IDR ', ''));
                           setPaymentTo(tx.name);
                           setAcquirer(tx.acquirer);
@@ -599,6 +653,7 @@ export default function Home() {
                           setRrn(tx.rrn);
                           setTerminalId(tx.terminalId);
                           setCustomerPan(tx.customerPan);
+                          setTxStatus(tx.status || 'Berhasil');
                           if (tx.merchantCity) setMerchantCity(tx.merchantCity);
                           if (tx.merchantPan) setMerchantPan(tx.merchantPan);
                           if (tx.merchantRef) setMerchantRef(tx.merchantRef);
@@ -616,7 +671,12 @@ export default function Home() {
                           <div className={styles.aktivitasTxName}>{tx.name}</div>
                           <div className={styles.aktivitasTxAmount}>{tx.amount}</div>
                           <div className={styles.aktivitasTxType}>{tx.type}</div>
-                          <span className={tx.status === 'Berhasil' ? styles.aktivitasBadgeBerhasil : styles.aktivitasBadgeGagal}>
+                          <span
+                            className={tx.status === 'Berhasil' ? styles.aktivitasBadgeBerhasil : styles.aktivitasBadgeGagal}
+                            onClick={(e) => toggleTransactionStatus(tx.id, e)}
+                            title="Tahan transaksi atau klik badge untuk ubah status"
+                            style={{ cursor: 'pointer' }}
+                          >
                             {tx.status}
                           </span>
                         </div>
@@ -1697,25 +1757,43 @@ export default function Home() {
 
           <div className={styles.separator}></div>
 
-          {/* Success Section */}
+          {/* Success / Failed Section */}
           <div className={styles.successSection}>
-            <div className={styles.checkIconContainer}>
-              <div className={styles.checkIconInner}>
-                <svg
-                  width="42"
-                  height="42"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="white"
-                  strokeWidth="4"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <polyline points="20 6 9 17 4 12"></polyline>
-                </svg>
+            <div className={`${styles.checkIconContainer} ${txStatus === 'Gagal' ? styles.gagalIconContainer : ''}`}>
+              <div className={`${styles.checkIconInner} ${txStatus === 'Gagal' ? styles.gagalIconInner : ''}`}>
+                {txStatus === 'Gagal' ? (
+                  <svg
+                    width="36"
+                    height="36"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="white"
+                    strokeWidth="3.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                  </svg>
+                ) : (
+                  <svg
+                    width="42"
+                    height="42"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="white"
+                    strokeWidth="4"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                )}
               </div>
             </div>
-            <div className={styles.title}>Pembayaran QRIS Berhasil</div>
+            <div className={styles.title}>
+              {txStatus === 'Gagal' ? 'Pembayaran QRIS Gagal' : 'Pembayaran QRIS Berhasil'}
+            </div>
             <div className={styles.date}>{timestamp}</div>
             <div className={styles.amount}>IDR {amount}</div>
           </div>
