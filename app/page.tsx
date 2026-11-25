@@ -761,7 +761,7 @@ export default function Home() {
                   <path d="M19 20.5C19 17.5 16 15.5 12 15.5C8 15.5 5 17.5 5 20.5" />
                   <circle cx="12" cy="8" r="4.5" />
                 </svg>
-                <span className={styles.aktivitasNavLabel}>Akun Saya</span>
+                <span className={styles.aktivitasNavLabel}>Akun</span>
               </button>
 
             </div>
